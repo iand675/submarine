@@ -18,5 +18,5 @@ cabal-version:       >=1.8
 executable submarine
   main-is:             Main.hs
   -- other-modules:       
-  build-depends:       base ==4.6.*, lens, pipes, pipes-parse, pipes-network, http-types, text, bytestring, network
+  build-depends:       aeson, base ==4.6.*, lens, mtl, http-conduit, http-types, text, bytestring, network, either, resourcet
   hs-source-dirs:      src
