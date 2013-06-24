@@ -167,7 +167,9 @@ replaceSection :: T.Text -> ByteString -> ByteString -> T.Text
 replaceSection text placeholder val = T.replace (T.cons ':' $ decodeUtf8 placeholder) (decodeUtf8 val) text
 
 get :: T.Text -> [(ByteString, Maybe ByteString)] -> DigitalOcean a
-get = undefined
+get t rs = get' $ undefined t rs
+
+get' :: T.Text -> DigitalOcean a
 get' = undefined
 
 -- | /droplets
