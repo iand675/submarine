@@ -5,10 +5,16 @@ import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Prim hiding ((<|>), many)
 import Text.Parsec.Text
+import Text.Parsec.Token
+
+type Variable = String
 
 data TemplateSegment
 	= Literal String
-	| Embed [String]
+	| Embed Modifier [Variable]
+	deriving (Read, Show, Eq)
+
+data Modifier = Simple | Reserved | Fragment | Label | PathSegment | PathParameter | Query | QueryContinuation
 	deriving (Read, Show, Eq)
 
 range :: Char -> Char -> Parser Char
@@ -49,14 +55,7 @@ pctEncoded = do
 
 literalChar :: Parser Char
 literalChar
-	=   char  '\x21'
-	<|> char  '\x23'
-	<|> char  '\x24'
-	<|> char  '\x26'
-	<|> char  '\x3D'
-	<|> char  '\x5D'
-	<|> char  '\x5F'
-	<|> char  '\x7E'
+	=   (choice $ map char ['\x21', '\x23', '\x24', '\x26', '\x3D', '\x5D', '\x5F', '\x7E'])
 	<|> range '\x28' '\x3B'
 	<|> range '\x3F' '\x5B'
 	<|> range '\x61' '\x7A'
@@ -66,8 +65,25 @@ literalChar
 literal :: Parser TemplateSegment
 literal = (Literal . concat) <$> many1 ((pure <$> literalChar) <|> pctEncoded)
 
-variable :: Parser TemplateSegment
-variable = (Embed . pure . concat) <$> many1 ((pure <$> (alphaNum <|> char '_')) <|> pctEncoded)
+variables :: Parser TemplateSegment
+variables = Embed <$> modifier <*> sepBy1 variable (spaces *> char ',' *> spaces)
+
+modifier :: Parser Modifier
+modifier
+	=   (char '+' *> pure Reserved)
+	<|> (char '#' *> pure Fragment)
+	<|> (char '.' *> pure Label)
+	<|> (char '/' *> pure PathSegment)
+	<|> (char ';' *> pure PathParameter)
+	<|> (char '?' *> pure Query)
+	<|> (char '&' *> pure QueryContinuation)
+	<|> pure Simple
+
+variable :: Parser Variable
+variable = concat <$> many1 ((pure <$> (alphaNum <|> char '_')) <|> pctEncoded)
 
 embed :: Parser TemplateSegment
-embed = between (char '{') (char '}') variable
+embed = between (char '{') (char '}') variables
+
+urlTemplate :: Parser [TemplateSegment]
+urlTemplate = many (literal <|> embed)
