@@ -16,7 +16,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 executable submarine
-  main-is:             Main.hs
-  -- other-modules:       
-  build-depends:       aeson, base ==4.6.*, lens, mtl, http-conduit, http-types, text, bytestring, network, either, resourcet
+  main-is:             Network/DigitalOcean.hs
+  other-modules:       Network.API.Hypermedia, Network.API
+  build-depends:       aeson, base ==4.6.*, data-default, lens, mtl, http-conduit, http-types, text, bytestring, network, either, resourcet, unordered-containers
   hs-source-dirs:      src

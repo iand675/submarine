@@ -160,7 +160,7 @@ instance API.ToRouteParameters NewRecord where
 		, ("weight", p x weight)
 		]
 
-newtype DigitalOcean a = DigitalOcean { runDigitalOcean :: ReaderT Credentials (ResourceT IO) a }
+newtype DigitalOcean a = DigitalOcean { runDigitalOcean :: ReaderT Credentials APIClient a }
 	deriving (Monad, MonadIO, Functor)
 
 replaceSection :: T.Text -> ByteString -> ByteString -> T.Text
@@ -170,7 +170,7 @@ get :: T.Text -> [(ByteString, Maybe ByteString)] -> DigitalOcean a
 get t rs = get' $ undefined t rs
 
 get' :: T.Text -> DigitalOcean a
-get' = undefined
+get' = DigitalOcean . lift . API.get
 
 -- | /droplets
 getDroplets :: DigitalOcean [Droplet]
