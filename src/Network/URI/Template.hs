@@ -3,8 +3,16 @@ import Control.Applicative
 import Data.Char
 import Text.Parsec.Char
 import Text.Parsec.Combinator
-import Text.Parsec.Prim hiding ((<|>))
+import Text.Parsec.Prim hiding ((<|>), many)
 import Text.Parsec.Text
+
+data TemplateSegment
+	= Literal String
+	| Embed [String]
+	deriving (Read, Show, Eq)
+
+range :: Char -> Char -> Parser Char
+range l r = satisfy (\c -> l <= c && c <= r)
 
 ucschar :: Parser Char
 ucschar
@@ -32,10 +40,12 @@ iprivate
 	<|> range '\xF0000' '\xFFFFD'
 	<|> range '\x100000' '\x10FFFD'
 
---pctEncoded = char '%' >> hexDigit >> hexDigit >> return True
-
-range :: Char -> Char -> Parser Char
-range l r = satisfy (\c -> l <= c && c <= r)
+pctEncoded :: Parser String
+pctEncoded = do
+	h <- char '%'
+	d1 <- hexDigit
+	d2 <- hexDigit
+	return [h, d1, d2]
 
 literalChar :: Parser Char
 literalChar
@@ -52,4 +62,12 @@ literalChar
 	<|> range '\x61' '\x7A'
 	<|> ucschar
 	<|> iprivate
-	-- <|> pctEncoded x
+
+literal :: Parser TemplateSegment
+literal = (Literal . concat) <$> many1 ((pure <$> literalChar) <|> pctEncoded)
+
+variable :: Parser TemplateSegment
+variable = (Embed . pure . concat) <$> many1 ((pure <$> (alphaNum <|> char '_')) <|> pctEncoded)
+
+embed :: Parser TemplateSegment
+embed = between (char '{') (char '}') variable
