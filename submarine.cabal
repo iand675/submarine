@@ -17,6 +17,6 @@ cabal-version:       >=1.8
 
 executable submarine
   main-is:             Network/DigitalOcean.hs
-  other-modules:       Network.API.Hypermedia, Network.API
+  other-modules:       Network.API.Hypermedia, Network.API, Network.URI.Template
   build-depends:       aeson, base ==4.6.*, data-default, lens, mtl, http-conduit, http-types, text, bytestring, network, either, resourcet, unordered-containers
   hs-source-dirs:      src
