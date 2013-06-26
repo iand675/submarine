@@ -37,13 +37,11 @@ runAPIClient base m = withManager $ \man -> do
 newtype APIClient a = APIClient { fromAPIClient :: ReaderT (Request (ResourceT IO), Manager) (ResourceT IO) a }
 	deriving (Functor, Applicative, Monad)
 
-get :: FromJSON a => T.Text -> APIClient a
+get :: FromJSON a => T.Text -> APIClient (Maybe a)
 get t = APIClient $ do
 	(r, m) <- ask
 	res <- lift $ httpLbs r m
-	case decode $ responseBody res of
-		Nothing -> error "Malformed JSON"
-		Just val -> return val
+	return $ decode $ responseBody res
 
 put :: (ToJSON a, FromJSON b) => T.Text -> a -> APIClient b
 put = undefined

@@ -1,0 +1,63 @@
+module Network.Mandrill where
+
+/users
+	/info
+	/ping
+	/ping2
+	/senders
+/messages
+	/send
+	/send-templates
+	/search
+	/send-raw
+	/list-scheduled
+	/cancel-scheduled
+	/reschedule
+/tags
+	/list
+	/delete
+	/info
+	/time-series
+	/all-time-series
+/rejects
+	/add
+	/list
+	/delete
+/whitelist
+	/add
+	/list
+	/delete
+/senders
+	/list
+	/domains
+	/info
+	/time-series
+/urls
+	/list
+	/search
+	/time-series
+/templates
+	/add
+	/info
+	/update
+	/publish
+	/delete
+	/list
+	/time-series
+	/render
+/webhooks
+	/list
+	/add
+	/info
+	/update
+	/delete
+/inbound
+	/domains
+	/routes
+	/send-raw
+/exports
+	/info
+	/list
+	/rejects
+	/whitelist
+	/activity

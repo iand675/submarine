@@ -1,0 +1,49 @@
+module Network.ElasticSearch where
+
+-- CORE
+-- index
+-- delete
+-- multi-get
+-- update
+-- search
+-- percolate
+-- bulk
+-- bulk udp
+-- count
+-- delete by query
+-- more like this
+-- validate
+-- explain
+
+-- INDICES
+-- aliases
+-- analyze
+-- create index
+-- delete index
+-- open/close index
+-- get settings
+-- get mapping
+-- put mapping
+-- delete mapping
+-- optimize
+-- flush
+-- snapshot
+-- update settings
+-- templates
+-- warmers
+-- stats
+-- status
+-- segments
+-- clear cache
+-- indices exists
+-- types exists
+
+-- CLUSTER
+-- health
+-- state
+-- update settings
+-- nodes info
+-- nodes stats
+-- nodes shutdown
+-- nodes hot threads
+-- cluster reroute
