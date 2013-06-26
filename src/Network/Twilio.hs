@@ -27,6 +27,42 @@
 -- CONNECT APPS
 -- AUTHORIZED CONNECT APPS
 
+data VoiceGender = Man | Woman
+data VoiceLanguage = AmericanEnglish | BritishEnglish | Spanish | French | German | Italian
+type RepeatCount = Int
+
+data Key = Digit Int | Pound | Star
+
+data Say = Say
+	{ voice :: Maybe VoiceGender
+	, language :: Maybe VoiceLanguage
+	, loop :: Maybe RepeatCount
+	, text :: Text
+	}
+
+data Play = Play
+	{ loop :: Maybe RepeatCount
+	, url :: Text
+	}
+
+class GatherAction a where {}
+instance GatherAction Say where {}
+instance GatherAction Play where {}
+instance GatherAction Pause where {}
+
+data Gather = Gather
+	{ action :: Maybe Text
+	, method :: Maybe Method
+	, timeout :: Maybe Int
+	, finishOnKey :: Maybe Key
+	, numDigits :: Maybe Int
+	, actions :: [SerializedVerb]
+	}
+
+data Pause = Pause
+	{ _pauseLength :: Maybe Int
+	}
+
 -- Twiml
 -- voice
 	-- say
