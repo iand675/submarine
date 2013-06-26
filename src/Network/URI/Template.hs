@@ -1,8 +1,10 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Network.URI.Template where
 import Control.Applicative
 import Data.Char
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
+import Network.HTTP.Base
 import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Prim hiding ((<|>), many)
@@ -20,6 +22,28 @@ type UriTemplate = [TemplateSegment]
 
 data Modifier = Simple | Reserved | Fragment | Label | PathSegment | PathParameter | Query | QueryContinuation
 	deriving (Read, Show, Eq)
+
+separator :: Modifier -> Char
+separator m = case m of
+	Simple -> ','
+	Reserved -> ','
+	Fragment -> ','
+	Label -> '.'
+	PathSegment -> '/'
+	PathParameter -> ';'
+	Query -> '&'
+	QueryContinuation -> '&'
+
+encoder :: Modifier -> Name
+encoder m = case m of
+	Simple -> 'urlEncode
+	Reserved -> 'id
+	Fragment -> 'id
+	Label -> 'id
+	PathSegment -> 'urlEncode
+	PathParameter -> 'urlEncode
+	Query -> 'id
+	QueryContinuation -> 'id
 
 range :: Char -> Char -> Parser Char
 range l r = satisfy (\c -> l <= c && c <= r)
@@ -97,10 +121,14 @@ uriTemplate :: Parser UriTemplate
 uriTemplate = spaces *> many (literal <|> embed)
 
 templateToExp :: UriTemplate -> Exp
-templateToExp ts = AppE (VarE $ mkName "concat") $ ListE $ concatMap segmentToExp ts
+templateToExp ts = AppE (VarE 'concat) $ ListE $ concatMap segmentToExp ts
 
 segmentToExp (Literal s) = [LitE $ StringL s]
-segmentToExp (Embed m v) = map (VarE . mkName) v
+segmentToExp (Embed m v) = map (AppE prefix . enc . VarE . mkName) v
+	where
+		enc = AppE (VarE $ encoder m)
+		-- cons the prefix onto the beginning of each embedded segment
+		prefix = InfixE (Just $ LitE $ CharL $ separator m) (ConE $ '(:)) Nothing
 
 quasiEval :: String -> Q Exp
 quasiEval str = do
