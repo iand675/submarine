@@ -1,10 +1,12 @@
 module Network.URI.Template where
 import Control.Applicative
 import Data.Char
+import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Quote
 import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Prim hiding ((<|>), many)
-import Text.Parsec.Text
+import Text.Parsec.String
 import Text.Parsec.Token
 
 type Variable = String
@@ -13,6 +15,8 @@ data TemplateSegment
 	= Literal String
 	| Embed Modifier [Variable]
 	deriving (Read, Show, Eq)
+
+type UriTemplate = [TemplateSegment]
 
 data Modifier = Simple | Reserved | Fragment | Label | PathSegment | PathParameter | Query | QueryContinuation
 	deriving (Read, Show, Eq)
@@ -89,5 +93,28 @@ variable = concat <$> many1 ((pure <$> (alphaNum <|> char '_')) <|> pctEncoded)
 embed :: Parser TemplateSegment
 embed = between (char '{') (char '}') variables
 
-urlTemplate :: Parser [TemplateSegment]
-urlTemplate = many (literal <|> embed)
+uriTemplate :: Parser UriTemplate
+uriTemplate = spaces *> many (literal <|> embed)
+
+templateToExp :: UriTemplate -> Exp
+templateToExp ts = AppE (VarE $ mkName "concat") $ ListE $ concatMap segmentToExp ts
+
+segmentToExp (Literal s) = [LitE $ StringL s]
+segmentToExp (Embed m v) = map (VarE . mkName) v
+
+quasiEval :: String -> Q Exp
+quasiEval str = do
+	l <- location
+	let parseLoc = loc_module l ++ ":" ++ show (loc_start l)
+	let res = parse uriTemplate parseLoc str
+	case res of
+		Left err -> fail $ show err
+		Right tpl -> return $ templateToExp tpl
+
+uri :: QuasiQuoter
+uri = QuasiQuoter
+	{ quoteExp = quasiEval
+	, quotePat = error "Cannot use uri quasiquoter in pattern"
+	, quoteType = error "Cannot use uri quasiquoter in type"
+	, quoteDec = error "Cannot use uri quasiquoter as declarations"
+	}
