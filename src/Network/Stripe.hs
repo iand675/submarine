@@ -1,6 +1,17 @@
 module Network.Stripe where
 
 -- create charge
+data NewCharge = NewCharge
+	{ _newChargeAmount
+	, _newChargeCurrency
+	, _newChargeCustomer
+	, _newChargeCard
+	, _newChargeDescription
+	, _newChargeCapture
+	, _newChargeApplicationFee
+	}
+
+
 -- get charge
 -- refund charge
 -- capture charge
