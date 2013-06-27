@@ -1,5 +1,32 @@
 module Network.Mandrill where
 
+data WebHookEventType
+	= Send
+	| HardBounce
+	| SoftBounce
+	| Open
+		{ ip :: Text
+		, userAgent :: Text
+		, location :: Location
+		, parsedUserAgent :: ParsedUserAgent
+		}
+	| Click
+		{ url :: Text
+		, ip :: Text
+		, userAgent :: Text
+		, location :: Location
+		, parsedUserAgent :: ParsedUserAgent
+		}
+	| Spam
+	| Unsubscribe
+	| Reject
+
+data WebHookEvent = WebHookEvent
+	{ timestamp :: Int
+	, eventType :: WebHookEventType
+	, message :: MessageDetails
+	}
+
 -- /users/info.json
 getUserInfo :: Mandrill User
 
