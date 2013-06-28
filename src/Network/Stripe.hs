@@ -1,14 +1,6 @@
 module Network.Stripe where
 
--- create charge
-data NewCharge = NewCharge
-	{ _newchargeAmount :: Cents
-	, _newchargeCurrency :: Text
-	, _newchargeIdentifier :: Either CustomerId CreditCard
-	, _newchargeDescription :: Maybe Text
-	, _newchargeCapture :: Maybe Bool
-	, _newchargeApplicationFee :: Maybe Cents
-	}
+-- Stripe API version 2013-02-13
 
 data Charge = Charge
 	{ _chargeIdentifier :: Text
@@ -32,9 +24,36 @@ data Charge = Charge
 	, _chargeDispute :: Maybe Dispute
 	}
 
+-- create charge
+-- POST /v1/charges (NewCharge -> Charge)
+data NewCharge = NewCharge
+	{ _newchargeAmount :: Cents
+	, _newchargeCurrency :: Text
+	, _newchargeIdentifier :: Either CustomerId CreditCard
+	, _newchargeDescription :: Maybe Text
+	, _newchargeCapture :: Maybe Bool
+	, _newchargeApplicationFee :: Maybe Cents
+	}
+
 -- get charge
+-- GET /v1/charges/{CHARGE_ID}
+
 -- refund charge
+-- POST /v1/charges/{CHARGE_ID}/refund (Refund -> Charge)
+data Refund = Refund
+	{ _refundChargeId :: Text
+	, _refundAmount :: Maybe Cents
+	, _refundApplicationFee :: Maybe Bool
+	}
+
 -- capture charge
+-- POST /v1/charges/{CHARGE_ID}/capture
+data Capture = Capture
+	{ _captureChargeId :: Text
+	, _captureAmount :: Maybe Cents
+	, _captureApplicationFee :: Maybe Bool
+	}
+
 -- list all charges
 
 -- create customer
