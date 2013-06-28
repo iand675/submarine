@@ -2,15 +2,35 @@ module Network.Stripe where
 
 -- create charge
 data NewCharge = NewCharge
-	{ _newChargeAmount
-	, _newChargeCurrency
-	, _newChargeCustomer
-	, _newChargeCard
-	, _newChargeDescription
-	, _newChargeCapture
-	, _newChargeApplicationFee
+	{ _newchargeAmount :: Cents
+	, _newchargeCurrency :: Text
+	, _newchargeIdentifier :: Either CustomerId CreditCard
+	, _newchargeDescription :: Maybe Text
+	, _newchargeCapture :: Maybe Bool
+	, _newchargeApplicationFee :: Maybe Cents
 	}
 
+data Charge = Charge
+	{ _chargeIdentifier :: Text
+	, _chargeObject :: Text
+	, _chargeCreated :: Integer
+	, _chargeLivemode :: Bool
+	, _chargePaid :: Bool
+	, _chargeAmount :: Cents
+	, _chargeCurrency :: Text
+	, _chargeRefunded :: Bool
+	, _chargeFee :: Maybe Cents
+	, _chargeFeeDetails :: Maybe FeeDetails
+	, _chargeCard :: CreditCard
+	, _chargeCaptured :: Bool
+	, _chargeFailureMessage :: Maybe Text
+	, _chargeFailureCode :: Maybe Text
+	, _chargeAmountRefunded :: Cents
+	, _chargeCustomer :: Maybe CustomerId
+	, _chargeInvoice :: Maybe invoice
+	, _chargeDescription :: Maybe Text
+	, _chargeDispute :: Maybe Dispute
+	}
 
 -- get charge
 -- refund charge
