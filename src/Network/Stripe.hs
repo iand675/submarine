@@ -1,5 +1,7 @@
 module Network.Stripe where
 
+newtype Stripe = Stripe { fromStripe :: ReaderT StripeConfig (ResourceT IO) a } deriving (Functor, Applicative, Monad)
+
 -- Stripe API version 2013-02-13
 
 data Charge = Charge

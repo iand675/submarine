@@ -303,10 +303,10 @@ getDomainRecords domainId = get [url| /domains/{domainId}/records |]
 addDomainRecord :: DomainId -> NewRecord -> DigitalOcean DomainRecord
 addDomainRecord domainId newRecord = get [url| /domains/{domainId}/records/new{?newRecord*} |]
 
----- /domains/{domainId}/records/{id}
+---- /domains/{domainId}/records/{recordId}
 getDomainRecord :: DomainId -> RecordId -> DigitalOcean (Maybe DomainRecord)
 getDomainRecord domainId recordId = get [url| /domains/{domainId}/records/{recordId} |]
 
----- /domains/{id}/records/{id}/destroy
+---- /domains/{domainId}/records/{recordId}/destroy
 removeDomainRecord :: DomainId -> RecordId -> DigitalOcean Bool
 removeDomainRecord domainId recordId = get [url| /domains/{domainId}/records/{recordId}/destroy |]
