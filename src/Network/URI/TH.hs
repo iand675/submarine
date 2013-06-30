@@ -4,17 +4,6 @@ import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import Network.HTTP.Base
 
-separator :: Modifier -> Char
-separator m = case m of
-	Simple -> ','
-	Reserved -> ','
-	Fragment -> ','
-	Label -> '.'
-	PathSegment -> '/'
-	PathParameter -> ';'
-	Query -> '&'
-	QueryContinuation -> '&'
-
 encoder :: Modifier -> Name
 encoder m = case m of
 	Simple -> 'urlEncode

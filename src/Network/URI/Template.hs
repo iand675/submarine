@@ -1,3 +1,4 @@
+{-# LANGUAGE DefaultSignatures, FlexibleInstances #-}
 module Network.URI.Template where
 import Control.Applicative
 import Data.Char
@@ -7,9 +8,45 @@ import Text.Parsec.Prim hiding ((<|>), many)
 import Text.Parsec.String
 import Text.Parsec.Token
 
-data ValueModifier = Normal | Explode | MaxLength Int
+data TemplateValue
+	= Single String
+	| Associative [(String, String)]
+	| List [String]
+	deriving (Read, Show, Eq)
 
-type Variable = Variable String ValueModifier
+class ToSingleTemplateValue a where
+	toSingleTemplateValue :: a -> String
+
+instance ToSingleTemplateValue Int where
+	toSingleTemplateValue = show
+
+instance ToSingleTemplateValue [Char] where
+	toSingleTemplateValue = id
+
+class ToTemplateValue a where
+	toTemplateValue :: a -> TemplateValue
+	default toTemplateValue :: ToSingleTemplateValue a => a -> TemplateValue
+	toTemplateValue = Single . toSingleTemplateValue
+
+instance ToSingleTemplateValue a => ToTemplateValue [a] where
+	toTemplateValue = List . map toSingleTemplateValue
+
+separator :: Modifier -> Char
+separator m = case m of
+	Simple -> ','
+	Reserved -> ','
+	Fragment -> ','
+	Label -> '.'
+	PathSegment -> '/'
+	PathParameter -> ';'
+	Query -> '&'
+	QueryContinuation -> '&'
+
+data ValueModifier = Normal | Explode | MaxLength Int
+	deriving (Read, Show, Eq)
+
+data Variable = Variable String ValueModifier
+	deriving (Read, Show, Eq)
 
 data TemplateSegment
 	= Literal String
@@ -88,13 +125,14 @@ modifier = (choice $ map (uncurry charMeans) modifiers) <|> pure Simple
 		]
 
 variable :: Parser Variable
-variable = Literal <$> name <*> valueModifier
+variable = Variable <$> name <*> valueModifier
 	where
 		name = concat <$> many1 ((pure <$> (alphaNum <|> char '_')) <|> pctEncoded)
 		valueModifier = charMeans '*' Explode <|> (MaxLength <$> (char ':' *> parseInt)) <|> pure Normal
+		parseInt = read <$> many1 digit
 
 embed :: Parser TemplateSegment
-embed = between (char '{') (char '}') variablees
+embed = between (char '{') (char '}') variables
 
 uriTemplate :: Parser UriTemplate
 uriTemplate = spaces *> many (literal <|> embed)
