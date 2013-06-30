@@ -1,17 +1,15 @@
-{-# LANGUAGE TemplateHaskell #-}
 module Network.URI.Template where
 import Control.Applicative
 import Data.Char
-import Language.Haskell.TH.Syntax
-import Language.Haskell.TH.Quote
-import Network.HTTP.Base
 import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Prim hiding ((<|>), many)
 import Text.Parsec.String
 import Text.Parsec.Token
 
-type Variable = String
+data ValueModifier = Normal | Explode | MaxLength Int
+
+type Variable = Variable String ValueModifier
 
 data TemplateSegment
 	= Literal String
@@ -22,28 +20,6 @@ type UriTemplate = [TemplateSegment]
 
 data Modifier = Simple | Reserved | Fragment | Label | PathSegment | PathParameter | Query | QueryContinuation
 	deriving (Read, Show, Eq)
-
-separator :: Modifier -> Char
-separator m = case m of
-	Simple -> ','
-	Reserved -> ','
-	Fragment -> ','
-	Label -> '.'
-	PathSegment -> '/'
-	PathParameter -> ';'
-	Query -> '&'
-	QueryContinuation -> '&'
-
-encoder :: Modifier -> Name
-encoder m = case m of
-	Simple -> 'urlEncode
-	Reserved -> 'id
-	Fragment -> 'id
-	Label -> 'id
-	PathSegment -> 'urlEncode
-	PathParameter -> 'urlEncode
-	Query -> 'id
-	QueryContinuation -> 'id
 
 range :: Char -> Char -> Parser Char
 range l r = satisfy (\c -> l <= c && c <= r)
@@ -112,37 +88,14 @@ modifier = (choice $ map (uncurry charMeans) modifiers) <|> pure Simple
 		]
 
 variable :: Parser Variable
-variable = concat <$> many1 ((pure <$> (alphaNum <|> char '_')) <|> pctEncoded)
+variable = Literal <$> name <*> valueModifier
+	where
+		name = concat <$> many1 ((pure <$> (alphaNum <|> char '_')) <|> pctEncoded)
+		valueModifier = charMeans '*' Explode <|> (MaxLength <$> (char ':' *> parseInt)) <|> pure Normal
 
 embed :: Parser TemplateSegment
-embed = between (char '{') (char '}') variables
+embed = between (char '{') (char '}') variablees
 
 uriTemplate :: Parser UriTemplate
 uriTemplate = spaces *> many (literal <|> embed)
 
-templateToExp :: UriTemplate -> Exp
-templateToExp ts = AppE (VarE 'concat) $ ListE $ concatMap segmentToExp ts
-
-segmentToExp (Literal s) = [LitE $ StringL s]
-segmentToExp (Embed m v) = map (AppE prefix . enc . VarE . mkName) v
-	where
-		enc = AppE (VarE $ encoder m)
-		-- cons the prefix onto the beginning of each embedded segment
-		prefix = InfixE (Just $ LitE $ CharL $ separator m) (ConE $ '(:)) Nothing
-
-quasiEval :: String -> Q Exp
-quasiEval str = do
-	l <- location
-	let parseLoc = loc_module l ++ ":" ++ show (loc_start l)
-	let res = parse uriTemplate parseLoc str
-	case res of
-		Left err -> fail $ show err
-		Right tpl -> return $ templateToExp tpl
-
-uri :: QuasiQuoter
-uri = QuasiQuoter
-	{ quoteExp = quasiEval
-	, quotePat = error "Cannot use uri quasiquoter in pattern"
-	, quoteType = error "Cannot use uri quasiquoter in type"
-	, quoteDec = error "Cannot use uri quasiquoter as declarations"
-	}
