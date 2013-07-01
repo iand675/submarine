@@ -2,6 +2,7 @@
 module Network.URI.Template where
 import Control.Applicative
 import Data.Char
+import Data.List
 import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Prim hiding ((<|>), many)
@@ -14,22 +15,11 @@ data TemplateValue
 	| List [String]
 	deriving (Read, Show, Eq)
 
-class ToSingleTemplateValue a where
-	toSingleTemplateValue :: a -> String
-
-instance ToSingleTemplateValue Int where
-	toSingleTemplateValue = show
-
-instance ToSingleTemplateValue [Char] where
-	toSingleTemplateValue = id
-
 class ToTemplateValue a where
 	toTemplateValue :: a -> TemplateValue
-	default toTemplateValue :: ToSingleTemplateValue a => a -> TemplateValue
-	toTemplateValue = Single . toSingleTemplateValue
 
-instance ToSingleTemplateValue a => ToTemplateValue [a] where
-	toTemplateValue = List . map toSingleTemplateValue
+instance ToTemplateValue Int where
+	toTemplateValue = Single . show
 
 separator :: Modifier -> Char
 separator m = case m of
@@ -136,4 +126,22 @@ embed = between (char '{') (char '}') variables
 
 uriTemplate :: Parser UriTemplate
 uriTemplate = spaces *> many (literal <|> embed)
+
+renderTemplate :: UriTemplate -> [(String, TemplateValue)] -> Maybe String
+renderTemplate u vs = do
+	sections <- mapM (stringify vs) u
+	return $ concat sections
+
+stringify :: [(String, TemplateValue)] -> TemplateSegment -> Maybe String
+stringify varMap templateSection = case templateSection of
+	Literal l -> Just l
+	Embed m vars -> do
+		rs <- mapM (something m) vars
+		return $ intercalate [separator m] $ rs
+	where
+		something :: Variable -> Maybe TemplateValue
+		something (Variable varName valueModifier) = lookup varName varMap
+		something2 :: Modifier -> TemplateValue -> String
+		something2
+
 
