@@ -21,16 +21,28 @@ class ToTemplateValue a where
 instance ToTemplateValue Int where
 	toTemplateValue = Single . show
 
-separator :: Modifier -> Char
-separator m = case m of
-	Simple -> ','
-	Reserved -> ','
-	Fragment -> ','
-	Label -> '.'
-	PathSegment -> '/'
-	PathParameter -> ';'
-	Query -> '&'
-	QueryContinuation -> '&'
+prefix :: Modifier -> String
+prefix m = case m of
+	Simple -> ""
+	Reserved -> ""
+	Fragment -> "#"
+	Label -> "."
+	PathSegment -> "/"
+	PathParameter -> ";"
+	Query -> "?"
+	QueryContinuation -> "&"
+
+subsequentSeparator :: Modifier -> String
+subsequentSeparator m = case m of
+	Simple -> ","
+	Reserved -> ","
+	Fragment -> ","
+	Label -> "."
+	PathSegment -> "/"
+	PathParameter -> ";"
+	Query -> "&"
+	QueryContinuation -> "&"
+
 
 data ValueModifier = Normal | Explode | MaxLength Int
 	deriving (Read, Show, Eq)
@@ -137,11 +149,13 @@ stringify varMap templateSection = case templateSection of
 	Literal l -> Just l
 	Embed m vars -> do
 		rs <- mapM (something m) vars
-		return $ intercalate [separator m] $ rs
+		return $ prefix m ++ intercalate (subsequentSeparator m) rs
 	where
-		something :: Variable -> Maybe TemplateValue
-		something (Variable varName valueModifier) = lookup varName varMap
-		something2 :: Modifier -> TemplateValue -> String
-		something2
+		something :: Modifier -> Variable -> Maybe String
+		something m (Variable varName valueModifier) = (stringifyTemplateValue m varName) <$> lookup varName varMap
 
-
+stringifyTemplateValue :: Modifier -> String -> TemplateValue -> String
+stringifyTemplateValue m name t = case t of
+	(Single s) -> if (m == Query || m == QueryContinuation || m == PathParameter) then name ++ "=" ++ s else s
+	(Associative ss) -> ""
+	(List ss) -> ""
