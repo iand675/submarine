@@ -134,6 +134,8 @@ updateCustomerSubscription :: CustomerId -> UpdatedSubscription -> Stripe
 updateCustomerSubscription 
 
 -- cancel subscription
+cancelSubscription :: CustomerId -> Stripe DeletedResponse
+cancelSubscription = delete . customerId
 
 -- create plan
 -- get plan
