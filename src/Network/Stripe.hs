@@ -156,9 +156,12 @@ cancelSubscription = delete . customerId
 -- pay invoice
 -- update invoice
 -- list invoices
+listInvoices :: ListInvoicesQuery -> Stripe Invoices
+listInvoices q = get (invoicesUrl ++ [url| {?q*} |])
 -- get upcoming invoice
 
 -- create invoice item
+createInvoiceItem
 -- get invoice item
 -- update invoice item
 -- delete invoice item
