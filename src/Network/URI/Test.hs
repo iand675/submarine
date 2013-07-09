@@ -72,4 +72,3 @@ continuedQueryParams = do
   [url|{&foo}|] @?= "&foo=1"
   [url|{&foo,bar}|] @?= "&foo=1&bar=2"
 
-
