@@ -1,0 +1,23 @@
+session:
+  name: "submarine"
+  root: "~/Code/submarine"
+  windows:
+    - name: "server"
+      layout: even-vertical
+      panes:
+        - cmd: "guard"
+        - cmd: ["pwd", "ls -la"]
+          focus: true
+    - name: "lib"
+      layout: even-vertical
+      panes:
+        - cmd: "ls"
+    - name: "frontend"
+      panes:
+        - cmd: "ls"
+    - name: "ios"
+      panes:
+        - cmd: "ls"
+    - name: "mac"
+      panes:
+        - cmd: "ls"
