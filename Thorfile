@@ -15,3 +15,10 @@ class Tmux < Thor
     %x( tmux attach-session -t submarine )
   end
 end
+
+class Cabal < Thor
+  desc "init" "adds all libraries to the cabal-dev sandbox"
+  def init
+    cabal-dev add-source lib/*
+  end
+end
