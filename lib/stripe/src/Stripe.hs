@@ -1,11 +1,14 @@
-module Network.Stripe where
-
+module Stripe where
+import Control.Lens
+import Data.Aeson
+import Data.Aeson.TH
+import Network.URI.Template
 
 chargesUrl = [url| /v1/charges |]
 chargeUrl = [url| /v1/charges/{chargeId} |]
 couponsUrl = [url| /v1/coupons |]
 couponUrl = [url| /v1/coupons/{couponId} |]
-customersUrl [url| /v1/customers |]
+customersUrl = [url| /v1/customers |]
 customerUrl = [url| /v1/customers/{customerId} |]
 customerSubscriptionUrl = [url| /v1/customers/{customerId}/subscription |]
 invoicesUrl = [url| /v1/invoices |]
