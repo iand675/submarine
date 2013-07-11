@@ -121,9 +121,13 @@ charMeans = means . char
 modifier :: Parser Modifier
 modifier = (choice $ map (uncurry charMeans) modifiers) <|> pure Simple
 	where modifiers =
-		[ ('+', Reserved), ('#', Fragment), ('.', Label)
-		, ('/', PathSegment), (';', PathParameter)
-		, ('?', Query), ('&', QueryContinuation)
+		[ ('+', Reserved)
+    , ('#', Fragment)
+    , ('.', Label)
+		, ('/', PathSegment)
+    , (';', PathParameter)
+		, ('?', Query)
+    , ('&', QueryContinuation)
 		]
 
 variable :: Parser Variable
