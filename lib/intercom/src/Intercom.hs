@@ -1,24 +1,31 @@
+{-# LANGUAGE QuasiQuotes #-}
 module Network.Intercom where
 
-listUsers
+newtype Intercom a = Intercom { fromIntercom :: ReaderT IntercomConfig (ResourceT IO) a }
+  deriving (Functor, Applicative, Monad)
+
+runIntercom :: IntercomConfig -> Intercom a -> IO a
+
+data UserRef = UserId Int | Email Text
+
 listUsers = get [url| /users |]
 
-getUser :: Either UserId Email -> Intercom User
-getUser = get [url| /users{?user_id, email} |]
+getUser :: UserRef -> Intercom User
+getUser = get [url| /users{?u*} |]
 
 createUser :: NewUser -> Intercom User
 createUser = post [url| /users |]
 
-deleteUser :: Either UserId Email -> Intercom User
-deleteUser = delete [url| /users{?user_id, email} |]
+deleteUser :: UserRef -> Intercom User
+deleteUser = delete [url| /users{?u*} |]
 
-createNote :: Either UserId Email -> Note -> Intercom Note
+createNote :: UserRef -> Note -> Intercom Note
 createNote = post [url| /users/notes |]
 
-createImpression :: Either UserId Email -> Impression -> Intercom Int
+createImpression :: UserRef -> Impression -> Intercom Int
 createImpression = post [url| /users/impressions |]
 
-listMessageThreads :: Either UserId Email -> Intercom [MessageThread]
+listMessageThreads :: UserRef -> Intercom [MessageThread]
 listMessageThreads = get [url| /users/message_threads |]
 
 getMessageThread = get [url| /users/message_threads |]

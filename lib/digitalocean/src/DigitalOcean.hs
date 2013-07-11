@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, GeneralizedNewtypeDeriving, OverloadedStrings, MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
 module Network.DigitalOcean where
 import Control.Applicative
 import Control.Lens
@@ -11,7 +11,6 @@ import Data.Aeson.TH
 import Data.ByteString (ByteString)
 import Data.List
 import qualified Network.API as API
-import Network.HTTP.Conduit hiding (port)
 
 type DropletId = Int
 type ImageId = Int
@@ -155,7 +154,9 @@ instance API.ToRouteParameters NewRecord where
 		]
 
 newtype DigitalOcean a = DigitalOcean { runDigitalOcean :: ReaderT Credentials APIClient a }
-	deriving (Monad, MonadIO, Functor)
+	deriving (Functor, Applicative, Monad, MonadIO)
+
+runDigitalOcean :: Credentials -> DigitalOcean a -> IO a
 
 -- get :: T.Text -> [(ByteString, Maybe ByteString)] -> DigitalOcean a
 -- get t rs = get $ undefined t rs
