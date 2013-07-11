@@ -2,15 +2,16 @@ module URI where
 import Network.URI.Template
 import Test.HUnit.Base
 
-main = runTests $ do
-  simple
-  unescaped
-  fragment
-  label
-  path
-  pathParams
-  queryParams
-  continuedQueryParams
+main = runTests $ TestList
+  [ TestLabel "simple"  simple
+  , TestLabel "unescaped" unescaped
+  , TestLabel "fragment" fragment
+  , TestLabel "label" label
+  , path
+  , pathParams
+  , queryParams
+  , continuedQueryParams
+  ]
 
 var = "value"
 hello = "Hello World!"
