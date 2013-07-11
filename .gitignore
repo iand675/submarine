@@ -5,7 +5,9 @@ cabal-dev
 *.chi
 *.chs.h
 .virthualenv
+
 .vagrant
+
 Berksfile.lock
 *~
 *#
@@ -20,3 +22,4 @@ Gemfile.lock
 bin/*
 .bundle/*
 
+secrets.yml
