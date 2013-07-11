@@ -1,3 +1,9 @@
+require 'active_support/inflector'
+
+task :default do
+
+end
+
 namespace :server do
   desc 'Configure cabal'
   task :configure do
@@ -20,26 +26,64 @@ namespace :server do
   end
 end
 
-namespace :web do
+namespace :lib do
+  libs = {
+    amqp: 'amqp',
+    elastic_search: 'elastic-search',
+    api: 'easy-api',
+    digitalocean: 'digital-ocean',
+    github: 'github',
+    hypermedia: 'hypermedia',
+    intercom: 'intercom',
+    mandrill: 'mandrill',
+    metrics: 'metrics',
+    newrelic: 'newrelic',
+    postgres_uuid: 'postgres-simple-uuid',
+    stripe: 'stripe',
+    twilio: 'twilio',
+    uri: 'uri-template'
+  }
+
+  libs.each do |k, v|
+    namespace k do
+      humanized = ActiveSupport::Inflector.humanize k
+
+      desc "Configures the #{humanized} library."
+      task :configure do
+        Dir.chdir("lib/#{v}") do
+          sh 'cabal-dev configure --enable-tests --enable-benchmarks'
+        end
+      end
+
+      desc "Builds the #{humanized} library."
+      task :build => [:configure] do
+        Dir.chdir("lib/#{v}") do
+          sh 'cabal-dev build'
+        end
+      end
+
+      desc "Tests the #{humanized} library."
+      task :test => [:build] do
+        Dir.chdir("lib/#{v}") do
+          sh 'cabal-dev test'
+        end
+      end
+
+      #task :bench do
+      #end
+    end
+  end
+end
+
+namespace :frontend do
+  task :build do
+  end
+
   desc 'Bundle all assets for deployment'
   task :bundle do
   end
 
   desc 'Run frontend tests'
-  task :test do
-  end
-end
-
-namespace :cli do
-  desc 'Configure'
-  task :configure do
-  end
-
-  desc 'Build'
-  task :build do
-  end
-
-  desc 'Test'
   task :test do
   end
 end
@@ -51,6 +95,12 @@ namespace :ios do
 
   desc 'Test'
   task :test do
+  end
+end
+
+namespace :mac do
+  task :build do
+
   end
 end
 
