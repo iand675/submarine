@@ -1,5 +1,5 @@
 {-# LANGUAGE DefaultSignatures, FlexibleInstances #-}
-module Network.URI.Template where
+module URI.Template where
 import Control.Applicative
 import Data.Char
 import Data.List
@@ -120,15 +120,16 @@ charMeans = means . char
 
 modifier :: Parser Modifier
 modifier = (choice $ map (uncurry charMeans) modifiers) <|> pure Simple
-	where modifiers =
-		[ ('+', Reserved)
-    , ('#', Fragment)
-    , ('.', Label)
-		, ('/', PathSegment)
-    , (';', PathParameter)
-		, ('?', Query)
-    , ('&', QueryContinuation)
-		]
+	where
+		modifiers =
+			[ ('+', Reserved)
+			, ('#', Fragment)
+			, ('.', Label)
+			, ('/', PathSegment)
+			, (';', PathParameter)
+			, ('?', Query)
+			, ('&', QueryContinuation)
+			]
 
 variable :: Parser Variable
 variable = Variable <$> name <*> valueModifier

@@ -1,8 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Network.URI.TH where
+module URI.TH where
+import Text.Parsec.Prim
+import Text.Parsec.String
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import Network.HTTP.Base
+import URI.Template
 
 encoder :: Modifier -> Name
 encoder m = case m of
@@ -23,7 +26,7 @@ segmentToExp (Embed m v) = map (AppE prefix . enc . VarE . mkName) v
 	where
 		enc = AppE (VarE $ encoder m)
 		-- cons the prefix onto the beginning of each embedded segment
-		prefix = InfixE (Just $ LitE $ CharL $ separator m) (ConE $ '(:)) Nothing
+		prefix = InfixE (Just $ LitE $ CharL $ subsequentSeparator m) (ConE $ '(:)) Nothing
 
 quasiEval :: String -> Q Exp
 quasiEval str = do

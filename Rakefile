@@ -112,6 +112,7 @@ namespace :mac do
   end
 end
 
+=begin
 namespace :db do
   desc 'Migrate'
   task :migrate do
@@ -121,3 +122,4 @@ namespace :db do
   task :rollback do
   end
 end
+=end
