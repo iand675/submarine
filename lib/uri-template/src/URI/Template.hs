@@ -43,6 +43,14 @@ subsequentSeparator m = case m of
 	Query -> "&"
 	QueryContinuation -> "&"
 
+prefixAndSeparators :: Modifier -> [String]
+prefixAndSeparators m = prefix m : separators m
+
+separators :: Modifier -> [String]
+separators m = repeat $ subsequentSeparator m
+
+applyPrefixes :: [String] -> [String] -> [String]
+applyPrefixes = zipWith (<>)
 
 data ValueModifier = Normal | Explode | MaxLength Int
 	deriving (Read, Show, Eq)

@@ -18,6 +18,10 @@ encoder m = case m of
 	Query -> 'id
 	QueryContinuation -> 'id
 
+separators = (prefix m) : repeat (subsequentSeparator m)
+
+
+
 templateToExp :: UriTemplate -> Exp
 templateToExp ts = AppE (VarE 'concat) $ ListE $ concatMap segmentToExp ts
 
