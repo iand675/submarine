@@ -1,56 +1,66 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Network.API where
+{-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
+module API where
 import Control.Applicative
 import Control.Monad.Reader
+import Control.Monad.Trans.Either
 import Control.Monad.Trans.Resource
 import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.Maybe
-import qualified Data.Text as T
 import Data.Text.Encoding
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as L
 import Network.HTTP.Conduit
 
-class ToRouteParameters a where
-	toParams :: a -> [(ByteString, Maybe ByteString)]
+data APIError = InvalidJSON | AuthorizationError
 
-class ParameterEncodable a where
-	paramEncode :: a -> Maybe ByteString
-
-instance ParameterEncodable a => ParameterEncodable (Maybe a) where
-	paramEncode = paramEncode
-
-instance ParameterEncodable a => ParameterEncodable [a] where
-	paramEncode = Just . B.intercalate "," . catMaybes . map paramEncode
-
-instance ParameterEncodable Int where
-	paramEncode = Just . encodeUtf8 . T.pack . show
-
-instance ParameterEncodable T.Text where
-	paramEncode = Just . encodeUtf8
-
-runAPIClient :: String -> APIClient a -> IO a
+runAPIClient :: String -> APIClient a -> IO (Either APIError a)
 runAPIClient base m = withManager $ \man -> do
 	r <- parseUrl base
-	runReaderT (fromAPIClient m) (r, man)
+	runEitherT $ runReaderT (fromAPIClient m) (r, man)
 
-newtype APIClient a = APIClient { fromAPIClient :: ReaderT (Request (ResourceT IO), Manager) (ResourceT IO) a }
-	deriving (Functor, Applicative, Monad)
+jsonize :: (FromJSON a) => Response L.ByteString -> APIClient (Response a)
+jsonize r = APIClient $ case decode $ responseBody r of
+  Nothing -> lift $ left InvalidJSON
+  Just jsonResp -> return $ r { responseBody = jsonResp }
 
-get :: FromJSON a => T.Text -> APIClient (Maybe a)
-get t = APIClient $ do
-	(r, m) <- ask
-	res <- lift $ httpLbs r m
-	return $ decode $ responseBody res
+newtype APIClient a = APIClient { fromAPIClient :: ReaderT (Request (ResourceT IO), Manager) (EitherT APIError (ResourceT IO)) a }
+	deriving (Functor, Applicative, Monad, MonadIO)
 
-put :: (ToJSON a, FromJSON b) => T.Text -> a -> APIClient b
-put = undefined
+get :: FromJSON a => ByteString -> APIClient (Response (Maybe a))
+get p = APIClient $ do
+  (req, man) <- ask
+  let r = req { path = p }
+  resp <- lift $ lift $ httpLbs req man
+  fromAPIClient $ jsonize resp
 
-post :: (ToJSON a, FromJSON b) => T.Text -> a -> APIClient b
-post = undefined
 
-patch :: (ToJSON a, FromJSON b) => T.Text -> a -> APIClient b
-patch = undefined
+put :: (ToJSON a, FromJSON b) => ByteString -> a -> APIClient (Response b)
+put p v = APIClient $ do
+  (req, man) <- ask
+  let r = req { method = "PUT", path = p, requestBody = RequestBodyLBS $ encode v }
+  resp <- lift $ lift $ httpLbs r man
+  fromAPIClient $ jsonize resp
 
-delete :: (ToJSON a, FromJSON b) => T.Text -> a -> APIClient b
-delete = undefined
+
+post :: (ToJSON a, FromJSON b) => ByteString -> a -> APIClient (Response b)
+post p v = APIClient $ do
+  (req, man) <- ask
+  let r = req { method = "POST", path = p, requestBody = RequestBodyLBS $ encode v }
+  resp <- lift $ lift $ httpLbs r man
+  fromAPIClient $ jsonize resp
+
+patch :: (ToJSON a, FromJSON b) => ByteString -> a -> APIClient (Response b)
+patch p v = APIClient $ do
+  (req, man) <- ask
+  let r = req { method = "PATCH", path = p, requestBody = RequestBodyLBS $ encode v }
+  resp <- lift $ lift $ httpLbs r man
+  fromAPIClient $ jsonize resp
+
+delete :: (ToJSON a, FromJSON b) => ByteString -> a -> APIClient (Response b)
+delete p v = APIClient $ do
+  (req, man) <- ask
+  let r = req { method = "DELETE", path = p, requestBody = RequestBodyLBS $ encode v }
+  resp <- lift $ lift $ httpLbs r man
+  fromAPIClient $ jsonize resp
+
