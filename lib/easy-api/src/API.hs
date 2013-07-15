@@ -12,9 +12,11 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import Network.HTTP.Conduit
 
-data APIError = InvalidJSON | AuthorizationError
+data APIError = InvalidJSON | ExceptionalStatusCodeError String
 
-runAPIClient :: String -> APIClient a -> IO (Either APIError a)
+type RequestMiddleware = Request (ResourceT IO) -> Request (ResourceT IO)
+
+runAPIClient :: String -> RequestMiddleware -> APIClient a -> IO (Either APIError a)
 runAPIClient base m = withManager $ \man -> do
 	r <- parseUrl base
 	runEitherT $ runReaderT (fromAPIClient m) (r, man)
@@ -24,7 +26,13 @@ jsonize r = APIClient $ case decode $ responseBody r of
   Nothing -> lift $ left InvalidJSON
   Just jsonResp -> return $ r { responseBody = jsonResp }
 
-newtype APIClient a = APIClient { fromAPIClient :: ReaderT (Request (ResourceT IO), Manager) (EitherT APIError (ResourceT IO)) a }
+data ClientSettings = ClientSettings
+  { baseRequest :: Request (ResourceT IO)
+  , clientManager :: Manager
+  , requestMiddleware :: RequestMiddleware
+  }
+
+newtype APIClient a = APIClient { fromAPIClient :: ReaderT ClientSettings (EitherT APIError (ResourceT IO)) a }
 	deriving (Functor, Applicative, Monad, MonadIO)
 
 get :: FromJSON a => ByteString -> APIClient (Response (Maybe a))

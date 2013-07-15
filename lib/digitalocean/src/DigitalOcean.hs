@@ -153,10 +153,14 @@ instance API.ToRouteParameters NewRecord where
 		, ("weight", p x weight)
 		]
 
-newtype DigitalOcean a = DigitalOcean { runDigitalOcean :: ReaderT Credentials APIClient a }
+newtype DigitalOcean a = DigitalOcean { fromDigitalOcean :: APIClient a }
 	deriving (Functor, Applicative, Monad, MonadIO)
 
-runDigitalOcean :: Credentials -> DigitalOcean a -> IO a
+runDigitalOcean :: Credentials -> DigitalOcean a -> IO (Either APIError a)
+runDigitalOcean c m = runAPIClient
+  "https://api.digitalocean.com/"
+  (\r -> r { path = path r ++ "&client_id=" ++ c })
+  (fromDigitalOcean m)
 
 -- get :: T.Text -> [(ByteString, Maybe ByteString)] -> DigitalOcean a
 -- get t rs = get $ undefined t rs
