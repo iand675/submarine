@@ -167,151 +167,152 @@ runDigitalOcean c m = runAPIClient
 
 -- | /droplets
 getDroplets :: DigitalOcean [Droplet]
-getDroplets = get [url| /droplets |]
+getDroplets = DigitalOcean $ get [url| /droplets |]
 
 ---- | /droplets/new
 addDroplet :: NewDropletOptions -> DigitalOcean NewDroplet
-addDroplet newDroplet = get [url| /droplets/new{?newDroplet*} |]
+addDroplet newDroplet = DigitalOcean $ get [url| /droplets/new{?newDroplet*} |]
 
 ---- | /droplets/{dropletId}
 getDroplet :: DropletId -> DigitalOcean (Maybe Droplet)
-getDroplet dropletId = get [url| /droplets/{dropletId} |]
+getDroplet dropletId = DigitalOcean $ get [url| /droplets/{dropletId} |]
 
 ---- /droplets/{dropletId}/reboot
 rebootDroplet :: DropletId -> DigitalOcean (Maybe Event)
-rebootDroplet dropletId = get [url| /droplets/{dropletId}/reboot |]
+rebootDroplet dropletId = DigitalOcean $ get [url| /droplets/{dropletId}/reboot |]
 
 ---- /droplets/{dropletId}/power_cycle
 powerCycleDroplet :: DropletId -> DigitalOcean (Maybe Event)
-powerCycleDroplet dropletId = get [url| /droplets/{dropletId}/power_cycle |]
+powerCycleDroplet dropletId = DigitalOcean $ get [url| /droplets/{dropletId}/power_cycle |]
 
 ---- /droplets/{dropletId}/shutdown
 shutdownDroplet :: DropletId -> DigitalOcean (Maybe Event)
-shutdownDroplet dropletId = get [url| /droplets/{dropletId}/shutdown|]
+shutdownDroplet dropletId = DigitalOcean $ get [url| /droplets/{dropletId}/shutdown|]
 
 ---- /droplets/{dropletId}/power_off
 powerOffDroplet :: DropletId -> DigitalOcean (Maybe Event)
-powerOffDroplet dropletId = get [url| /droplets/{dropletId}/power_off|]
+powerOffDroplet dropletId = DigitalOcean $ get [url| /droplets/{dropletId}/power_off|]
 
 ---- /droplets/{dropletId}/power_on
 powerOnDroplet :: DropletId -> DigitalOcean (Maybe Event)
-powerOnDroplet dropletId = get [url| /droplets/{dropletId}/power_on|]
+powerOnDroplet dropletId = DigitalOcean $ get [url| /droplets/{dropletId}/power_on|]
 
 ---- /droplets/{dropletId}/password_reset
 resetRootDropletPassword :: DropletId -> DigitalOcean (Maybe Event)
-resetRootDropletPassword dropletId = get [url| /droplets/{dropletId}/password_reset|]
+resetRootDropletPassword dropletId = DigitalOcean $ get [url| /droplets/{dropletId}/password_reset|]
 
 ---- /droplets/{dropletId}/resize
 resizeDroplet :: DropletId -> SizeOptionId -> DigitalOcean (Maybe Event)
-resizeDroplet dropletId sizeId = get [url| /droplets/{dropletId}/resize|]
+resizeDroplet dropletId sizeId = DigitalOcean $ get [url| /droplets/{dropletId}/resize|]
 	where size_id = sizeId
 
 ---- /droplets/{dropletId}/snapshot
 takeDropletSnapshot :: DropletId -> Maybe T.Text -> DigitalOcean (Maybe Event)
-takeDropletSnapshot dropletId name = get [url| /droplets/{dropletId}/snapshot{?name} |]
+takeDropletSnapshot dropletId name = DigitalOcean $ get [url| /droplets/{dropletId}/snapshot{?name} |]
 
 ---- /droplets/{dropletId}/restore
 restoreDroplet :: DropletId -> ImageId -> DigitalOcean (Maybe Event)
-restoreDroplet dropletId imageId = get [url| /droplets/{dropletId}/restore{?image_id} |]
+restoreDroplet dropletId imageId = DigitalOcean $ get [url| /droplets/{dropletId}/restore{?image_id} |]
 	where image_id = imageId
 
 ---- /droplets/{dropletId}/rebuild
 rebuildDroplet :: DropletId -> ImageId -> DigitalOcean (Maybe Event)
-rebuildDroplet dropletId imageId = get [url| /droplets/{dropletId}/rebuild{?image_id} |]
+rebuildDroplet dropletId imageId = DigitalOcean $ get [url| /droplets/{dropletId}/rebuild{?image_id} |]
 	where image_id = imageId
 
 ---- /droplets/{dropletId}/enable_backups
 enableDropletBackups :: DropletId -> DigitalOcean (Maybe Event)
-enableDropletBackups dropletId = get [url| /droplets/{dropletId}/enable_backups |]
+enableDropletBackups dropletId = DigitalOcean $ get [url| /droplets/{dropletId}/enable_backups |]
 
 ---- /droplets/{dropletId}/disable_backups
 disableDropletBackups :: DropletId -> DigitalOcean (Maybe Event)
-disableDropletBackups dropletId = get [url| /droplets/{dropletId}/disable_backups |]
+disableDropletBackups dropletId = DigitalOcean $ get [url| /droplets/{dropletId}/disable_backups |]
 
 ---- /droplets/{dropletId}/rename
 renameDroplet :: DropletId -> String -> DigitalOcean (Maybe Event)
-renameDroplet dropletId name = get [url| /droplets/{dropletId}/rename{?name} |]
+renameDroplet dropletId name = DigitalOcean $ get [url| /droplets/{dropletId}/rename{?name} |]
 
 ---- /droplets/{dropletId}/destroy
 destroyDroplet :: DropletId -> DigitalOcean (Maybe Event)
-destroyDroplet dropletId = get [url| /droplets/{dropletId}/destroy |]
+destroyDroplet dropletId = DigitalOcean $ get [url| /droplets/{dropletId}/destroy |]
 
 ---- /regions
 getRegions :: DigitalOcean [Region]
-getRegions = get [url| /regions |]
+getRegions = DigitalOcean $ get [url| /regions |]
 
 ---- /images
 getImages :: Maybe ImageType -> DigitalOcean [Image]
-getImages filter = get [url| /images{?filter} |]
+getImages filter = DigitalOcean $ get [url| /images{?filter} |]
 
 ---- /images/{imageId}
 getImage :: ImageId -> DigitalOcean (Maybe Image)
-getImage imageId = get [url| /images/{imageId} |]
+getImage imageId = DigitalOcean $ get [url| /images/{imageId} |]
 
 ---- /images/{imageId}/destroy
 destroyImage :: ImageId -> DigitalOcean ()
-destroyImage imageId = get [url| /images/{imageId}/destroy |]
+destroyImage imageId = DigitalOcean $ get [url| /images/{imageId}/destroy |]
 
 ---- /images/{imageId}/transfer
 transferImage :: ImageId -> RegionId -> DigitalOcean (Maybe Event)
-transferImage imageId regionId = get [url| /images/{imageId}/transfer{?region_id} |]
+transferImage imageId regionId = DigitalOcean $ get [url| /images/{imageId}/transfer{?region_id} |]
 	where region_id = regionId
 
 ---- /ssh_keys
 getSshKeys :: DigitalOcean [SshKeyInfo]
-getSshKeys = get [url| /ssh_keys |]
+getSshKeys = DigitalOcean $ get [url| /ssh_keys |]
 
 ---- /ssh_keys/new
 addSshKey :: String -> String -> DigitalOcean NewSshKey
-addSshKey name sshKeyPub = get [url| /ssh_keys/new{?name, ssh_key_pub} |]
+addSshKey name sshKeyPub = DigitalOcean $ get [url| /ssh_keys/new{?name, ssh_key_pub} |]
 	where ssh_key_pub = sshKeyPub
 
 ---- /ssh_key/{sshKeyId}
 getSshKey :: SshKeyId -> DigitalOcean (Maybe SshKey)
-getSshKey sshKetId = get [url| /ssh_key/{sshKeyId} |]
+getSshKey sshKetId = DigitalOcean $ get [url| /ssh_key/{sshKeyId} |]
 
 ---- /ssh_key/{sshKeyId}/edit
 editSshKey :: SshKeyId -> String -> DigitalOcean SshKey
-editSshKey sshIdKey sshKeyPub = get [url| /ssh_key/{sshKeyId}/edit{?ssh_key_pub} |]
+editSshKey sshIdKey sshKeyPub = DigitalOcean $ get [url| /ssh_key/{sshKeyId}/edit{?ssh_key_pub} |]
 	where ssh_key_pub = sshKeyPub
 
 ---- /ssh_key/{sshKeyId}/destroy
 removeSshKey :: SshKeyId -> DigitalOcean Bool
-removeSshKey sshKeyId = get [url| /ssh_key/{sshKeyId}/destroy |]
+removeSshKey sshKeyId = DigitalOcean $ get [url| /ssh_key/{sshKeyId}/destroy |]
 
 ---- /sizes
 getInstanceSizeOptions :: DigitalOcean [SizeOption]
-getInstanceSizeOptions = get [url| /sizes |]
+getInstanceSizeOptions = DigitalOcean $ get [url| /sizes |]
 
 ---- /domains
 getDomains :: DigitalOcean [Domain]
-getDomains = get [url| /domains |]
+getDomains = DigitalOcean $ get [url| /domains |]
 
 ---- /domains/new
 addDomain :: T.Text -> IpAddress -> DigitalOcean NewDomain
-addDomain name ipAddress = get [url| /domains/new{?name, ip_address} |]
+addDomain name ipAddress = DigitalOcean $ get [url| /domains/new{?name, ip_address} |]
 	where ip_address = ipAddress
 
 ---- /domains/{domainId}
 getDomain :: DomainId -> DigitalOcean (Maybe Domain)
-getDomain domainId = get [url| /domains/{domainId} |]
+getDomain domainId = DigitalOcean $ get [url| /domains/{domainId} |]
 
 ---- /domains/{domainId}/destroy
 removeDomain :: DomainId -> DigitalOcean Bool
-removeDomain domainId = get [url| /domains/{domainId}/destroy |]
+removeDomain domainId = DigitalOcean $ get [url| /domains/{domainId}/destroy |]
 
 ---- /domains/{domainId}/records
 getDomainRecords :: DomainId -> DigitalOcean [DomainRecord]
-getDomainRecords domainId = get [url| /domains/{domainId}/records |]
+getDomainRecords domainId = DigitalOcean $ get [url| /domains/{domainId}/records |]
 
 ---- /domains/{domainId}/records/new
 addDomainRecord :: DomainId -> NewRecord -> DigitalOcean DomainRecord
-addDomainRecord domainId newRecord = get [url| /domains/{domainId}/records/new{?newRecord*} |]
+addDomainRecord domainId newRecord = DigitalOcean $ get [url| /domains/{domainId}/records/new{?newRecord*} |]
 
 ---- /domains/{domainId}/records/{recordId}
 getDomainRecord :: DomainId -> RecordId -> DigitalOcean (Maybe DomainRecord)
-getDomainRecord domainId recordId = get [url| /domains/{domainId}/records/{recordId} |]
+getDomainRecord domainId recordId = DigitalOcean $ get [url| /domains/{domainId}/records/{recordId} |]
 
 ---- /domains/{domainId}/records/{recordId}/destroy
 removeDomainRecord :: DomainId -> RecordId -> DigitalOcean Bool
-removeDomainRecord domainId recordId = get [url| /domains/{domainId}/records/{recordId}/destroy |]
+removeDomainRecord domainId recordId = DigitalOcean $ get [url| /domains/{domainId}/records/{recordId}/destroy |]
+
