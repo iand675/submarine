@@ -13,6 +13,20 @@ main = runTests $ TestList
   , continuedQueryParams
   ]
 
+parserTests = suite "Parser Tests" $ do
+  test "Literal"            $ parserTest "foo"     $ Literal "foo"
+  test "Simple"             $ parserTest "{foo}"   $ Embed Simple (Variable "foo" Normal)
+  test "Reserved"           $ parserTest "{+foo}"  $ Embed Reserved (Variable "foo" Normal)
+  test "Fragment"           $ parserTest "{#foo}"  $ Embed Fragment (Variable "foo" Normal)
+  test "Label"              $ parserTest "{.foo}"  $ Embed Label (Variable "foo" Normal)
+  test "Path Segment"       $ parserTest "{/foo}"  $ Embed PathSegment (Variable "foo" Normal)
+  test "Path Parameter"     $ parserTest "{;foo}"  $ Embed PathParameter (Variable "foo" Normal)
+  test "Query"              $ parserTest "{?foo}"  $ Embed Query (Variable "foo" Normal)
+  test "Query Continuation" $ parserTest "{&foo}"  $ Embed QueryContinuation (Variable "foo" Normal)
+  test "Explode"            $ parserTest "{foo*}"  $ Embed Simple (Variable "foo" Explode)
+  test "Max Length"         $ parserTest "{foo:1}" $ Embed Simple (Variable "foo" $ MaxLength 1)
+  where parserTest t e = parseTemplate t @?= Right [e]
+
 var = "value"
 hello = "Hello World!"
 path = "/foo/bar"
