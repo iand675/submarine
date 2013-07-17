@@ -30,11 +30,13 @@ processVariable :: Modifier -> Bool -> Variable -> TemplateValue -> String
 processVariable m isFirst (Variable varName varMod) val = do
   let opts = options m
   if isFirst
-    then maybe (return ()) addChar $ modifierPrefix opts
-    else addChar $ modifierSeparator opts
+    then undefined -- maybe (return ()) addChar $ modifierPrefix opts
+    else undefined -- addChar $ modifierSeparator opts
   case val of
-    (Single s) -> addStr varName >> addIfEmpIfEmptyString else addEqualSign >> processLengthVarMod >> appendProcessedString
-    (Associative l) -> 
+    (Single s) -> undefined -- addStr varName >> addIfEmpIfEmptyString else addEqualSign >> processLengthVarMod >> appendProcessedString
+    (Associative l) -> undefined
+    (List l) -> undefined
+
 
 
 {-

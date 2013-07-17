@@ -21,8 +21,8 @@ library
   build-depends:     base ==4.6.*, parsec ==3.1.*, template-haskell ==2.8.*, HTTP ==4000.2.*
   hs-source-dirs:    src
 
--- test-suite test-uri-templates
---   type:              exitcode-stdio-1.0
---   main-is:           Test.hs
---   hs-source-dirs:    src, test
---   build-depends:     base ==4.6.*, parsec ==3.1.*, template-haskell ==2.8.*, HTTP ==4000.2.*, HUnit ==1.2.*
+test-suite test-uri-templates
+   type:              exitcode-stdio-1.0
+   main-is:           Test.hs
+   hs-source-dirs:    src, test
+   build-depends:     base ==4.6.*, parsec ==3.1.*, template-haskell ==2.8.*, HTTP ==4000.2.*, HUnit ==1.2.*, mtl
