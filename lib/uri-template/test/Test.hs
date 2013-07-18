@@ -2,9 +2,17 @@
 module Main where
 import Control.Monad.Writer
 import URI.Parser
+import URI.Template
+import URI.TH
 import URI.Types
 import System.Exit
 import Test.HUnit hiding (test)
+
+{-describe ''Something $ do-}
+  {-it "somethings the something." $ do-}
+    {-order <- newOrder-}
+    {-let order' = addEntry order $ LineItem { item = Item { price = Money USD 1.11 } }-}
+    {-expect (total order') `to` Equal $ Money USD 1.11-}
 
 type TestRegistry = Writer [Test]
 
@@ -48,7 +56,27 @@ parserTest :: String -> TemplateSegment -> TestRegistry ()
 parserTest t e = test $ parseTemplate "test" t @?= Right [e]
 
 quasiQuoterTests = return ()
-embedTests = return ()
+
+embedTests = label "Embed Tests" $ suite $ do
+  label "Literal" $ embedTest "foo" "foo"
+  label "Simple" $ embedTest "{foo}" "bar"
+  label "Reserved" $ embedTest "{+foo}" "bar"
+  label "Fragment" $ embedTest "{#foo}" "#bar"
+  label "Label" $ embedTest "{.foo}" ".bar"
+  label "Path Segment" $ embedTest "{/foo}" "{foo}"
+  label "Path Parameter" $ embedTest "{;foo}" ";foo"
+  label "Query" $ embedTest "{?foo}" "?foo=bar"
+  label "Query Continuation" $ embedTest "{&foo}" "&foo=bar"
+  label "Explode" $ embedTest "{foo*}" "bar"
+  label "Max Length" $ embedTest "{foo:1}" "b"
+
+embedTestEnv = [("foo", Single "bar")]
+
+embedTest :: String -> String -> TestRegistry ()
+embedTest t expect = test $ do
+  let (Right tpl) = parseTemplate "test" t
+  let rendered = render tpl embedTestEnv
+  rendered @?= expect
 
 {-parserTests = suite "Parser Tests" $ do-}
   {-test "Literal"            $ parserTest "foo"     $ Literal "foo"-}

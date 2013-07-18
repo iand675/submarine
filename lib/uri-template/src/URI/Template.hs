@@ -37,7 +37,16 @@ processVariable m isFirst (Variable varName varMod) val = do
     (Associative l) -> undefined
     (List l) -> undefined
 
+processVariables :: [(String, TemplateValue)] -> Modifier -> [Variable] -> [String]
+processVariables = undefined
 
+render :: UriTemplate -> [(String, TemplateValue)] -> String
+render tpl env = concat $ foldr go [] tpl
+  where
+    renderWithEnv = processVariables env
+    go :: TemplateSegment -> [String] -> [String]
+    go (Literal s)  t = s : t
+    go (Embed m vs) t = renderWithEnv m vs ++ t
 
 {-
 prefix :: Modifier -> String
