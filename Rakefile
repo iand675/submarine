@@ -16,9 +16,13 @@ def cabal_tasks(lib_name, dir)
     end
 
     desc "Configures the #{human_lib_name} library."
-    task :configure do
+    task :configure do |task, args|
       Dir.chdir(dir) do
-        sh 'cabal-dev configure --enable-tests --enable-benchmarks'
+        if Dir.exists? 'dist'
+          puts "#{human_lib_name} already configured. Nothing to be done."
+        else
+          sh 'cabal-dev configure --enable-tests --enable-benchmarks'
+        end
       end
     end
 
@@ -77,7 +81,8 @@ namespace :lib do
     postgres_uuid: 'postgres-simple-uuid',
     stripe: 'stripe',
     twilio: 'twilio',
-    uri: 'uri-template'
+    uri: 'uri-template',
+    redis_simple: 'whodis'
   }
 
   libs.each {|lib_name, dir_name| cabal_tasks lib_name, "lib/#{dir_name}" }
