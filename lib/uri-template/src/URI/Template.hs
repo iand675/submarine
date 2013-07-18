@@ -27,18 +27,24 @@ options m = case m of
   Fragment          -> option (Just '#') ',' False Nothing    UnreservedOrReserved
 
 processVariable :: Modifier -> Bool -> Variable -> TemplateValue -> String
-processVariable m isFirst (Variable varName varMod) val = do
-  let opts = options m
-  if isFirst
-    then undefined -- maybe (return ()) addChar $ modifierPrefix opts
-    else undefined -- addChar $ modifierSeparator opts
-  case val of
-    (Single s) -> undefined -- addStr varName >> addIfEmpIfEmptyString else addEqualSign >> processLengthVarMod >> appendProcessedString
-    (Associative l) -> undefined
-    (List l) -> undefined
+processVariable m isFirst (Variable varName varMod) val =
+	prefix : case val of
+		(Single s) -> processSingle	s -- addStr varName >> addIfEmpIfEmptyString else addEqualSign >> processLengthVarMod >> appendProcessedString
+		(Associative l) -> processAssociative l
+		(List l) -> processList l
+	where
+		prefix = if isFirst
+			then modifierPrefix $ options m
+			else undefined -- addChar $ modifierSeparator opts
+    {-opts = options m-}
+		processSingle = undefined
+		processAssociative = undefined
+		processList = undefined
 
 processVariables :: [(String, TemplateValue)] -> Modifier -> [Variable] -> [String]
-processVariables = undefined
+processVariables env m vs = foldr go [] vs
+  where
+	  go = undefined
 
 render :: UriTemplate -> [(String, TemplateValue)] -> String
 render tpl env = concat $ foldr go [] tpl
