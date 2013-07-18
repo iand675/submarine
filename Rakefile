@@ -1,6 +1,25 @@
 require 'active_support/inflector'
 
-task :default do
+libs = {
+  amqp: 'amqp',
+  elastic_search: 'elastic-search',
+  api: 'easy-api',
+  digitalocean: 'digitalocean',
+  github: 'github',
+  hypermedia: 'hypermedia',
+  intercom: 'intercom',
+  mandrill: 'mandrill',
+  metrics: 'metrics',
+  newrelic: 'newrelic',
+  postgres_uuid: 'postgres-simple-uuid',
+  stripe: 'stripe',
+  twilio: 'twilio',
+  uri: 'uri-template',
+  redis_simple: 'whodis'
+}
+
+
+task :default => (libs.keys.map {|k| "lib:#{k}:test" }) do
 
 end
 
@@ -33,12 +52,10 @@ def cabal_tasks(lib_name, dir)
       end
     end
 
-    if tests_exist
-      desc "Tests the #{human_lib_name} library."
-      task :test => [:build] do
-        Dir.chdir(dir) do
-          sh 'cabal-dev test'
-        end
+    desc "Tests the #{human_lib_name} library."
+    task :test => [:build] do
+      Dir.chdir(dir) do
+        sh 'cabal-dev test'
       end
     end
   end
@@ -67,24 +84,6 @@ namespace :server do
 end
 
 namespace :lib do
-  libs = {
-    amqp: 'amqp',
-    elastic_search: 'elastic-search',
-    api: 'easy-api',
-    digitalocean: 'digitalocean',
-    github: 'github',
-    hypermedia: 'hypermedia',
-    intercom: 'intercom',
-    mandrill: 'mandrill',
-    metrics: 'metrics',
-    newrelic: 'newrelic',
-    postgres_uuid: 'postgres-simple-uuid',
-    stripe: 'stripe',
-    twilio: 'twilio',
-    uri: 'uri-template',
-    redis_simple: 'whodis'
-  }
-
   libs.each {|lib_name, dir_name| cabal_tasks lib_name, "lib/#{dir_name}" }
 end
 
@@ -116,6 +115,8 @@ namespace :mac do
 
   end
 end
+
+
 
 =begin
 namespace :db do
