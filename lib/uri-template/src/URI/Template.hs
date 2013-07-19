@@ -27,19 +27,18 @@ options m = case m of
   Fragment          -> option (Just '#') ',' False Nothing    UnreservedOrReserved
 
 processVariable :: Modifier -> Bool -> Variable -> TemplateValue -> String
-processVariable m isFirst (Variable varName varMod) val =
-	prefix : case val of
-		(Single s) -> processSingle	s -- addStr varName >> addIfEmpIfEmptyString else addEqualSign >> processLengthVarMod >> appendProcessedString
-		(Associative l) -> processAssociative l
-		(List l) -> processList l
-	where
-		prefix = if isFirst
-			then modifierPrefix $ options m
-			else undefined -- addChar $ modifierSeparator opts
-    {-opts = options m-}
-		processSingle = undefined
-		processAssociative = undefined
-		processList = undefined
+processVariable m isFirst (Variable varName varMod) val = prefix encodedVariable
+  where
+    encodedVariable = case val of
+      (Single s) -> processSingle	s -- addStr varName >> addIfEmpIfEmptyString else addEqualSign >> processLengthVarMod >> appendProcessedString
+      (Associative l) -> processAssociative l
+      (List l) -> processList l
+    prefix = if isFirst
+      then maybe id (:) (modifierPrefix $ options m)
+      else ((modifierSeparator $ options m) :)
+    processSingle = const []
+    processAssociative = const []
+    processList = const []
 
 processVariables :: [(String, TemplateValue)] -> Modifier -> [Variable] -> [String]
 processVariables env m vs = foldr go [] vs
