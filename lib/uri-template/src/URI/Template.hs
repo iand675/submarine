@@ -1,4 +1,5 @@
 module URI.Template where
+import Data.List
 import Data.Monoid
 import URI.Types
 
@@ -29,16 +30,27 @@ options m = case m of
 processVariable :: Modifier -> Bool -> Variable -> TemplateValue -> String
 processVariable m isFirst (Variable varName varMod) val = prefix encodedVariable
   where
+    settings = options m
     encodedVariable = case val of
-      (Single s) -> processSingle	s -- addStr varName >> addIfEmpIfEmptyString else addEqualSign >> processLengthVarMod >> appendProcessedString
-      (Associative l) -> processAssociative l
-      (List l) -> processList l
+      (Single s) -> processSingle	varName s -- addStr varName >> addIfEmpIfEmptyString else addEqualSign >> processLengthVarMod >> appendProcessedString
+      (Associative l) -> processAssociative varName l
+      (List l) -> processList varName l
     prefix = if isFirst
-      then maybe id (:) (modifierPrefix $ options m)
-      else ((modifierSeparator $ options m) :)
-    processSingle = const []
-    processAssociative = const []
-    processList = const []
+      then maybe id (:) (modifierPrefix settings)
+      else ((modifierSeparator settings) :)
+    -- TODO: check s to handle emptiness and use the appropriate modifierIfEmpty setting
+    -- TODO: handle correct encoding for interpolated values
+    -- TODO: this is just gross.
+    -- TODO: handle explodes / length issues
+    processSingle vn s = if modifierSupportsNamed settings
+      then vn ++ ('=' : s)
+      else s
+    processAssociative vn l = if modifierSupportsNamed settings
+      then vn ++ "," ++ (intercalate "," $ foldr (\(l, r) -> (l :) . (r :)) [] l)
+      else intercalate "," $ foldr (\(l, r) -> (l :) . (r :)) [] l
+    processList vn l = if modifierSupportsNamed settings
+      then vn ++ ('=' : intercalate "," l)
+      else intercalate "," l
 
 processVariables :: [(String, TemplateValue)] -> Modifier -> [Variable] -> [String]
 processVariables env m vs = foldr go [] vs
