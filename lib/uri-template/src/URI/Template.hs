@@ -1,7 +1,18 @@
 module URI.Template where
-import Data.List
+import Control.Monad.Writer.Strict
+import Data.DList hiding (map)
+import Data.List (intersperse)
+import Data.Maybe
 import Data.Monoid
 import URI.Types
+
+type StringBuilder = Writer (DList Char)
+
+addChar :: Char -> StringBuilder ()
+addChar = tell . singleton
+
+addString :: String -> StringBuilder ()
+addString = tell . fromList
 
 data Allow = Unreserved | UnreservedOrReserved
 
@@ -27,97 +38,56 @@ options m = case m of
   QueryContinuation -> option (Just '&') '&' True  (Just '=') Unreserved
   Fragment          -> option (Just '#') ',' False Nothing    UnreservedOrReserved
 
-processVariable :: Modifier -> Bool -> Variable -> TemplateValue -> String
-processVariable m isFirst (Variable varName varMod) val = prefix encodedVariable
+templateValueIsEmpty (Single s) = null s
+templateValueIsEmpty (Associative s) = null s
+templateValueIsEmpty (List s) = null s
+
+namePrefix :: ProcessingOptions -> String -> TemplateValue -> StringBuilder ()
+namePrefix opts name val = do
+  addString name
+  if templateValueIsEmpty val
+    then maybe (return ()) addChar $ modifierIfEmpty opts
+    else addChar '='
+
+processVariable :: Modifier -> Bool -> Variable -> TemplateValue -> StringBuilder ()
+processVariable m isFirst (Variable varName varMod) val = do
+  if isFirst
+    then maybe (addChar $ modifierSeparator settings) addChar $ modifierPrefix settings
+    else addChar $ modifierSeparator settings
+  if varMod /= Explode
+    then do
+      when (modifierSupportsNamed settings) (namePrefix settings varName val)
+      unexploded
+    else exploded
   where
     settings = options m
-    encodedVariable = case val of
-      (Single s) -> processSingle	varName s -- addStr varName >> addIfEmpIfEmptyString else addEqualSign >> processLengthVarMod >> appendProcessedString
-      (Associative l) -> processAssociative varName l
-      (List l) -> processList varName l
-    prefix = if isFirst
-      then maybe id (:) (modifierPrefix settings)
-      else ((modifierSeparator settings) :)
-    -- TODO: check s to handle emptiness and use the appropriate modifierIfEmpty setting
-    -- TODO: handle correct encoding for interpolated values
-    -- TODO: this is just gross.
-    -- TODO: handle explodes / length issues
-    processSingle vn s = if modifierSupportsNamed settings
-      then vn ++ ('=' : s)
-      else s
-    processAssociative vn l = if modifierSupportsNamed settings
-      then vn ++ "," ++ (intercalate "," $ foldr (\(l, r) -> (l :) . (r :)) [] l)
-      else intercalate "," $ foldr (\(l, r) -> (l :) . (r :)) [] l
-    processList vn l = if modifierSupportsNamed settings
-      then vn ++ ('=' : intercalate "," l)
-      else intercalate "," l
+    sepByCommas = sequence_ . intersperse (addChar ',')
+    associativeCommas (n, v) = addString n >> addChar ',' >> addString v
+    unexploded = case val of
+      (Single s) -> addString s
+      (Associative l) -> sepByCommas $ map associativeCommas l
+      (List l) -> sepByCommas $ map addString l
+    explodedAssociative (k, v) = do
+      addString k
+      addChar '='
+      addString v
+    exploded = case val of
+      (Single s) -> do
+        when (modifierSupportsNamed settings) (namePrefix settings varName val)
+        addString s
+      (Associative l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map explodedAssociative l
+      (List l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map addString l
 
-processVariables :: [(String, TemplateValue)] -> Modifier -> [Variable] -> [String]
-processVariables env m vs = foldr go [] vs
+processVariables env m vs = undefined
   where
-	  go = undefined
+    nonEmptyVariables :: [(Variable, TemplateValue)]
+    nonEmptyVariables = catMaybes $ map (\v -> fmap (\mv -> (v, mv)) $ findValue v) vs
+    findValue (Variable varName _) = lookup varName env
 
 render :: UriTemplate -> [(String, TemplateValue)] -> String
-render tpl env = concat $ foldr go [] tpl
+render tpl env = toList $ execWriter $ undefined
   where
-    renderWithEnv = processVariables env
-    go :: TemplateSegment -> [String] -> [String]
-    go (Literal s)  t = s : t
-    go (Embed m vs) t = renderWithEnv m vs ++ t
-
-{-
-prefix :: Modifier -> String
-prefix m = case m of
-	Simple -> ""
-	Reserved -> ""
-	Fragment -> "#"
-	Label -> "."
-	PathSegment -> "/"
-	PathParameter -> ";"
-	Query -> "?"
-	QueryContinuation -> "&"
-
-subsequentSeparator :: Modifier -> String
-subsequentSeparator m = case m of
-	Simple -> ","
-	Reserved -> ","
-	Fragment -> ","
-	Label -> "."
-	PathSegment -> "/"
-	PathParameter -> ";"
-	Query -> "&"
-	QueryContinuation -> "&"
-
-prefixAndSeparators :: Modifier -> [String]
-prefixAndSeparators m = prefix m : separators m
-
-separators :: Modifier -> [String]
-separators m = repeat $ subsequentSeparator m
-
-applyPrefixes :: [String] -> [String] -> [String]
-applyPrefixes = zipWith (<>)
-
-expandVariable (Variable varName varModifier) = undefined
-
-
-renderTemplate :: UriTemplate -> [(String, TemplateValue)] -> Maybe String
-renderTemplate u vs = do
-	sections <- mapM (stringify vs) u
-	return $ concat sections
-
-stringify :: [(String, TemplateValue)] -> TemplateSegment -> Maybe String
-stringify varMap templateSection = case templateSection of
-	Literal l -> Just l
-	Embed m vars -> do
-		rs <- mapM (something m) vars
-		return $ prefix m ++ intercalate (subsequentSeparator m) rs
-	where
-		something :: Modifier -> Variable -> Maybe String
-		something m (Variable varName valueModifier) = (stringifyTemplateValue m varName) <$> lookup varName varMap
-
-stringifyTemplateValue :: Modifier -> String -> TemplateValue -> String
-stringifyTemplateValue m name t = case t of
-	(Single s) -> if (m == Query || m == QueryContinuation || m == PathParameter) then name ++ "=" ++ s else s
-	(Associative ss) -> ""
-	(List ss) -> ""
--}
+    go :: TemplateSegment -> StringBuilder ()
+    go (Literal s) = addString s
+    go (Embed m vs) = undefined
+      {-(processVariable m True) : repeat (processVariable m False)-}
