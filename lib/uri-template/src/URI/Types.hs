@@ -18,7 +18,7 @@ data ValueModifier
   | MaxLength Int
 	deriving (Read, Show, Eq)
 
-data Variable = Variable String ValueModifier
+data Variable = Variable { variableName :: String, varaibleValueModifier :: ValueModifier }
 	deriving (Read, Show, Eq)
 
 data TemplateSegment
