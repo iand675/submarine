@@ -52,13 +52,16 @@ namePrefix opts name val = do
 processVariable :: Modifier -> Bool -> Variable -> TemplateValue -> StringBuilder ()
 processVariable m isFirst (Variable varName varMod) val = do
   if isFirst
-    then maybe (addChar $ modifierSeparator settings) addChar $ modifierPrefix settings
+    then maybe (return ()) addChar $ modifierPrefix settings
     else addChar $ modifierSeparator settings
-  if varMod /= Explode
-    then do
+  case varMod of
+    Normal -> do
       when (modifierSupportsNamed settings) (namePrefix settings varName val)
       unexploded
-    else exploded
+    Explode -> exploded
+    (MaxLength l) -> do
+      when (modifierSupportsNamed settings) (namePrefix settings varName val)
+      censor (fromList . take l . toList) unexploded
   where
     settings = options m
     sepByCommas = sequence_ . intersperse (addChar ',')
@@ -78,16 +81,21 @@ processVariable m isFirst (Variable varName varMod) val = do
       (Associative l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map explodedAssociative l
       (List l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map addString l
 
-processVariables env m vs = undefined
+processVariables :: [(String, TemplateValue)] -> Modifier -> [Variable] -> StringBuilder ()
+processVariables env m vs = sequence_ $ intersperse (addChar $ modifierSeparator $ options m) $ processedVariables
   where
+    findValue (Variable varName _) = lookup varName env
     nonEmptyVariables :: [(Variable, TemplateValue)]
     nonEmptyVariables = catMaybes $ map (\v -> fmap (\mv -> (v, mv)) $ findValue v) vs
-    findValue (Variable varName _) = lookup varName env
+    processors :: [Variable -> TemplateValue -> StringBuilder ()]
+    processors = (processVariable m True) : repeat (processVariable m False)
+    processedVariables :: [StringBuilder ()]
+    processedVariables = zipWith uncurry processors nonEmptyVariables
 
 render :: UriTemplate -> [(String, TemplateValue)] -> String
-render tpl env = toList $ execWriter $ undefined
+render tpl env = toList $ execWriter $ mapM_ go tpl
   where
     go :: TemplateSegment -> StringBuilder ()
     go (Literal s) = addString s
-    go (Embed m vs) = undefined
+    go (Embed m vs) = processVariables env m vs
       {-(processVariable m True) : repeat (processVariable m False)-}

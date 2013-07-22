@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Main where
-import Control.Monad.Writer
+import Control.Monad.Writer.Strict
 import URI.Parser
 import URI.Template
 import URI.TH
@@ -63,8 +63,8 @@ embedTests = label "Embed Tests" $ suite $ do
   label "Reserved" $ embedTest "{+foo}" "bar"
   label "Fragment" $ embedTest "{#foo}" "#bar"
   label "Label" $ embedTest "{.foo}" ".bar"
-  label "Path Segment" $ embedTest "{/foo}" "{foo}"
-  label "Path Parameter" $ embedTest "{;foo}" ";foo"
+  label "Path Segment" $ embedTest "{/foo}" "/bar"
+  label "Path Parameter" $ embedTest "{;foo}" ";foo=bar"
   label "Query" $ embedTest "{?foo}" "?foo=bar"
   label "Query Continuation" $ embedTest "{&foo}" "&foo=bar"
   label "Explode" $ embedTest "{foo*}" "bar"
