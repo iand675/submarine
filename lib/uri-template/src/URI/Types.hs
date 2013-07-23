@@ -1,16 +1,28 @@
+{-# LANGUAGE EmptyDataDecls, GADTs, FunctionalDependencies, MultiParamTypeClasses, FlexibleContexts, TypeSynonymInstances, FlexibleInstances #-}
 module URI.Types where
 
-data TemplateValue
-	= Single String
-	| Associative [(String, String)]
-	| List [String]
-	deriving (Read, Show, Eq)
+data SingleElement
+data AssociativeListElement
+data ListElement
 
-class ToTemplateValue a where
-	toTemplateValue :: a -> TemplateValue
+newtype ListElem a = ListElem { fromListElem :: a }
 
-instance ToTemplateValue Int where
+data TemplateValue a where
+	Single :: String -> TemplateValue SingleElement
+	Associative :: [(String, TemplateValue SingleElement)] -> TemplateValue AssociativeListElement
+	List :: [TemplateValue SingleElement] -> TemplateValue ListElement
+
+class ToTemplateValue a e | a -> e where
+	toTemplateValue :: a -> TemplateValue e
+
+instance ToTemplateValue Int SingleElement where
 	toTemplateValue = Single . show
+
+instance ToTemplateValue a SingleElement => ToTemplateValue (ListElem [a]) ListElement where
+  toTemplateValue = List . map toTemplateValue . fromListElem
+
+instance ToTemplateValue String SingleElement where
+  toTemplateValue = Single
 
 data ValueModifier
   = Normal
@@ -18,7 +30,7 @@ data ValueModifier
   | MaxLength Int
 	deriving (Read, Show, Eq)
 
-data Variable = Variable { variableName :: String, varaibleValueModifier :: ValueModifier }
+data Variable = Variable { variableName :: String, variableValueModifier :: ValueModifier }
 	deriving (Read, Show, Eq)
 
 data TemplateSegment

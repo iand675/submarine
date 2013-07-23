@@ -1,8 +1,9 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
 module URI.TH where
 import Data.List
 import Text.Parsec.Prim
 import Text.Parsec.String
+import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import Network.HTTP.Base
@@ -26,8 +27,19 @@ variableNames = nub . foldr go []
     go (Literal _) l = l
     go (Embed m vs) l = map variableName vs ++ l
 
+segmentToExpr :: TemplateSegment -> Q Exp
+segmentToExpr (Literal str) = appE (conE $ mkName "Literal") (litE $ StringL str)
+segmentToExpr (Embed m vs) = appE (appE (conE $ mkName "Embed") modifier) $ listE $ map variableToExpr vs
+  where
+    modifier = conE $ mkName $ show m
+    variableToExpr (Variable varName varModifier) = [| Variable $(litE $ StringL varName) $(conE $ mkName $ show varModifier) |]
+
 templateToExp :: UriTemplate -> Q Exp
-templateToExp ts = 
+templateToExp ts = [| render $(listE $ map segmentToExpr ts) $(templateValues) |]
+  where
+    templateValues = listE $ map makePair vns
+    vns = variableNames ts
+    makePair str = [| ($(litE $ StringL str), toTemplateValue $ $(varE $ mkName str)) |]
 
 -- AppE (VarE 'concat) $ ListE $ concatMap segmentToExp ts
 

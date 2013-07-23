@@ -92,21 +92,28 @@ embedTest t expect = test $ do
   {-test "Max Length"         $ parserTest "{foo:1}" $ Embed Simple (Variable "foo" $ MaxLength 1)-}
   {-where parserTest t e = parseTemplate t @?= Right [e]-}
 
-{-var = "value"-}
-{-hello = "Hello World!"-}
-{-path = "/foo/bar"-}
-{-list = ["red", "green", "blue"]-}
+var :: String
+var = "value"
+
+hello :: String
+hello = "Hello World!"
+
+path :: String
+path = "/foo/bar"
+
+list :: ListElem [String]
+list = ListElem ["red", "green", "blue"]
 {-keys = [("semi", ";"), ("dot", "."), ("comma", ",")]-}
 
-{-simple = do-}
-  {-[url|{var}|] @?= "value"-}
-  {-[url|{var,hello}|] @?= "value,Hello%20World%21"-}
-  {-[url|{var:3}|] @?= "val"-}
-  {-[url|{var:10}|] @?= "value"-}
-  {-[url|{list}|] @?= "red,green,blue"-}
-  {-[url|{list*}|] @?= "red,green,blue"-}
-  {-[url|{keys}|] @?= "semi,%3B,dot,.,comma,%2C"-}
-  {-[url|{keys*}|] @?= "semi=%3B,dot=.,comma=%2C"-}
+simple = do
+  [uri|{var}|] @?= "value"
+  [uri|{var,hello}|] @?= "value,Hello%20World%21"
+  {-[uri|{var:3}|] @?= "val"-}
+  {-[uri|{var:10}|] @?= "value"-}
+  [uri|{list}|] @?= "red,green,blue"
+  [uri|{list*}|] @?= "red,green,blue"
+  {-[uri|{keys}|] @?= "semi,%3B,dot,.,comma,%2C"-}
+  {-[uri|{keys*}|] @?= "semi=%3B,dot=.,comma=%2C"-}
 
 {-unescaped = do-}
   {-[url|{+path:6}/here|] @?= "/foo/b/here"-}

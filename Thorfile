@@ -16,9 +16,11 @@ class Tmux < Thor
   end
 end
 
+=begin
 class Cabal < Thor
   desc "init" "adds all libraries to the cabal-dev sandbox"
   def init
     cabal-dev add-source lib/*
   end
 end
+=end
