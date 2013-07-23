@@ -55,8 +55,6 @@ parserTests = label "Parser Tests" $ suite $ do
 parserTest :: String -> TemplateSegment -> TestRegistry ()
 parserTest t e = test $ parseTemplate "test" t @?= Right [e]
 
-quasiQuoterTests = return ()
-
 embedTests = label "Embed Tests" $ suite $ do
   label "Literal" $ embedTest "foo" "foo"
   label "Simple" $ embedTest "{foo}" "bar"
@@ -78,20 +76,6 @@ embedTest t expect = test $ do
   let rendered = render tpl embedTestEnv
   rendered @?= expect
 
-{-parserTests = suite "Parser Tests" $ do-}
-  {-test "Literal"            $ parserTest "foo"     $ Literal "foo"-}
-  {-test "Simple"             $ parserTest "{foo}"   $ Embed Simple (Variable "foo" Normal)-}
-  {-test "Reserved"           $ parserTest "{+foo}"  $ Embed Reserved (Variable "foo" Normal)-}
-  {-test "Fragment"           $ parserTest "{#foo}"  $ Embed Fragment (Variable "foo" Normal)-}
-  {-test "Label"              $ parserTest "{.foo}"  $ Embed Label (Variable "foo" Normal)-}
-  {-test "Path Segment"       $ parserTest "{/foo}"  $ Embed PathSegment (Variable "foo" Normal)-}
-  {-test "Path Parameter"     $ parserTest "{;foo}"  $ Embed PathParameter (Variable "foo" Normal)-}
-  {-test "Query"              $ parserTest "{?foo}"  $ Embed Query (Variable "foo" Normal)-}
-  {-test "Query Continuation" $ parserTest "{&foo}"  $ Embed QueryContinuation (Variable "foo" Normal)-}
-  {-test "Explode"            $ parserTest "{foo*}"  $ Embed Simple (Variable "foo" Explode)-}
-  {-test "Max Length"         $ parserTest "{foo:1}" $ Embed Simple (Variable "foo" $ MaxLength 1)-}
-  {-where parserTest t e = parseTemplate t @?= Right [e]-}
-
 var :: String
 var = "value"
 
@@ -105,13 +89,13 @@ list :: ListElem [String]
 list = ListElem ["red", "green", "blue"]
 {-keys = [("semi", ";"), ("dot", "."), ("comma", ",")]-}
 
-simple = do
-  [uri|{var}|] @?= "value"
-  [uri|{var,hello}|] @?= "value,Hello%20World%21"
+quasiQuoterTests = label "QuasiQuoter Tests" $ suite $ do
+  label "Simple" $ test ([uri|{var}|] @?= "value")
+  label "Multiple" $ test ([uri|{var,hello}|] @?= "value,Hello%20World%21")
   {-[uri|{var:3}|] @?= "val"-}
   {-[uri|{var:10}|] @?= "value"-}
-  [uri|{list}|] @?= "red,green,blue"
-  [uri|{list*}|] @?= "red,green,blue"
+  label "List" $ test ([uri|{list}|] @?= "red,green,blue")
+  label "Explode List" $ test ([uri|{list*}|] @?= "red,green,blue")
   {-[uri|{keys}|] @?= "semi,%3B,dot,.,comma,%2C"-}
   {-[uri|{keys*}|] @?= "semi=%3B,dot=.,comma=%2C"-}
 
