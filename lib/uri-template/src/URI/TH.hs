@@ -28,11 +28,15 @@ variableNames = nub . foldr go []
     go (Embed m vs) l = map variableName vs ++ l
 
 segmentToExpr :: TemplateSegment -> Q Exp
-segmentToExpr (Literal str) = appE (conE $ mkName "Literal") (litE $ StringL str)
-segmentToExpr (Embed m vs) = appE (appE (conE $ mkName "Embed") modifier) $ listE $ map variableToExpr vs
+segmentToExpr (Literal str) = appE (conE $ mkName "URI.Types.Literal") (litE $ StringL str)
+segmentToExpr (Embed m vs) = appE (appE (conE $ mkName "URI.Types.Embed") modifier) $ listE $ map variableToExpr vs
   where
-    modifier = conE $ mkName $ show m
-    variableToExpr (Variable varName varModifier) = [| Variable $(litE $ StringL varName) $(conE $ mkName $ show varModifier) |]
+    modifier = conE $ mkName ("URI.Types." ++ show m)
+    variableToExpr (Variable varName varModifier) = [| Variable $(litE $ StringL varName) $(varModifierE varModifier) |]
+    varModifierE vm = case vm of
+      Normal -> conE $ mkName "URI.Types.Normal"
+      Explode -> conE $ mkName "URI.Types.Explode"
+      (MaxLength x) -> appE (conE $ mkName "URI.Types.MaxLength") $ litE $ IntegerL $ fromIntegral x
 
 templateToExp :: UriTemplate -> Q Exp
 templateToExp ts = [| render $(listE $ map segmentToExpr ts) $(templateValues) |]

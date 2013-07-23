@@ -6,7 +6,7 @@ import URI.Template
 import URI.TH
 import URI.Types
 import System.Exit
-import Test.HUnit hiding (test)
+import Test.HUnit hiding (test, path)
 
 {-describe ''Something $ do-}
   {-it "somethings the something." $ do-}
@@ -87,59 +87,70 @@ path = "/foo/bar"
 
 list :: ListElem [String]
 list = ListElem ["red", "green", "blue"]
-{-keys = [("semi", ";"), ("dot", "."), ("comma", ",")]-}
+
+keys :: [(String, String)]
+keys = [("semi", ";"), ("dot", "."), ("comma", ",")]
 
 quasiQuoterTests = label "QuasiQuoter Tests" $ suite $ do
   label "Simple" $ test ([uri|{var}|] @?= "value")
   label "Multiple" $ test ([uri|{var,hello}|] @?= "value,Hello%20World%21")
-  {-[uri|{var:3}|] @?= "val"-}
-  {-[uri|{var:10}|] @?= "value"-}
+  label "Length Constraint" $ test ([uri|{var:3}|] @?= "val")
+  label "Sufficiently large length constraint" $ test ([uri|{var:10}|] @?= "value")
   label "List" $ test ([uri|{list}|] @?= "red,green,blue")
   label "Explode List" $ test ([uri|{list*}|] @?= "red,green,blue")
-  {-[uri|{keys}|] @?= "semi,%3B,dot,.,comma,%2C"-}
-  {-[uri|{keys*}|] @?= "semi=%3B,dot=.,comma=%2C"-}
+  label "Associative List" $ test ([uri|{keys}|] @?= "semi,%3B,dot,.,comma,%2C")
+  label "Explode Associative List" $ test ([uri|{?keys*}|] @?= "?semi=%3B&dot=.&comma=%2C")
 
-{-unescaped = do-}
-  {-[url|{+path:6}/here|] @?= "/foo/b/here"-}
-  {-[url|{+list}|] @?= "red,green,blue"-}
-  {-[url|{+list}|] @?= "red,green,blue"-}
-  {-[url|{+keys}|] @?= "semi,;,dot,.,comma,,"-}
-  {-[url|{+keys}|] @?= "semi=;,dot=.,comma=,"-}
+unescaped = do
+  [uri|{+path:6}/here|] @?= "/foo/b/here"
+  [uri|{+list}|] @?= "red,green,blue"
+  [uri|{+list}|] @?= "red,green,blue"
+  [uri|{+keys}|] @?= "semi,;,dot,.,comma,,"
+  [uri|{+keys}|] @?= "semi=;,dot=.,comma=,"
 
-{-fragment = do-}
-  {-[url|{#path:6}/here|] @?= "#/foo/b/here"-}
-  {-[url|{#list}|] @?= "#red,green,blue"-}
-  {-[url|{#list*}|] @?= "#red,green,blue"-}
-  {-[url|{#keys}|] @?= "#semi,;,dot,.,comma,,"-}
-  {-[url|{#keys*}|] @?= "#semi=;,dot=.,comma=,"-}
+fragment = do
+  [uri|{#path:6}/here|] @?= "#/foo/b/here"
+  [uri|{#list}|] @?= "#red,green,blue"
+  [uri|{#list*}|] @?= "#red,green,blue"
+  [uri|{#keys}|] @?= "#semi,;,dot,.,comma,,"
+  [uri|{#keys*}|] @?= "#semi=;,dot=.,comma=,"
 
-{-label = do-}
-  {-[url|X{.var:3}|] @?= "X.val"-}
-  {-[url|X{.list}|] @?= "X.red,green,blue"-}
-  {-[url|X{.list*}|] @?= "X.red.green.blue"-}
-  {-[url|X{.keys}|] @?= "X.semi,%3B,dot,.,comma,%2C"-}
-  {-[url|X{.keys*}|] @?= "X.semi=%3B.dot=..comma=%2C"-}
+labelTests = test $ do
+  [uri|X{.var:3}|] @?= "X.val"
+  [uri|X{.list}|] @?= "X.red,green,blue"
+  [uri|X{.list*}|] @?= "X.red.green.blue"
+  [uri|X{.keys}|] @?= "X.semi,%3B,dot,.,comma,%2C"
+  [uri|X{.keys*}|] @?= "X.semi=%3B.dot=..comma=%2C"
 
-{-path = do-}
-  {-[url|{/var:1,var}|] @?= "/v/value"-}
-  {-[url|{/list}|] @?= "/red,green,blue"-}
-  {-[url|{/list*}|] @?= "/red/green/blue"-}
-  {-[url|{/list*,path:4}|] @?= "/red/green/blue/%2Ffoo"-}
-  {-[url|{/keys}|] @?= "/semi,%3B,dot,.,comma,%2C"-}
-  {-[url|{/keys*}|] @?= "/semi=%3B/dot=./comma=%2C"-}
+pathTests = test $ do
+  [uri|{/var:1,var}|] @?= "/v/value"
+  [uri|{/list}|] @?= "/red,green,blue"
+  [uri|{/list*}|] @?= "/red/green/blue"
+  {-[uri|{/list*,path:4}|] @?= "/red/green/blue/%2Ffoo"-}
+  [uri|{/keys}|] @?= "/semi,%3B,dot,.,comma,%2C"
+  [uri|{/keys*}|] @?= "/semi=%3B/dot=./comma=%2C"
 
-{-pathParams = do-}
-  {-[url|{;hello:5}|] @?= ";hello=Hello"-}
-  {-[url|{;list}|] @?= ";list=red,green,blue"-}
-  {-[url|{;list*}|] @?= ";list=red;list=green;list=blue"-}
-  {-[url|{;keys}|] @?= ";keys=semi,%3B,dot,.,comma,%2C"-}
-  {-[url|{;keys*}|] @?= ";semi=%3B;dot=.;comma=%2C"-}
+pathParams = do
+  [uri|{;hello:5}|] @?= ";hello=Hello"
+  [uri|{;list}|] @?= ";list=red,green,blue"
+  [uri|{;list*}|] @?= ";list=red;list=green;list=blue"
+  [uri|{;keys}|] @?= ";keys=semi,%3B,dot,.,comma,%2C"
+  [uri|{;keys*}|] @?= ";semi=%3B;dot=.;comma=%2C"
 
-{-queryParams = do-}
-  {-[url|{?foo}|] @?= "?foo=1"-}
-  {-[url|{?foo,bar}|] @?= "?foo=1&bar=2"-}
+queryParams = do
+  [uri|{?foo}|] @?= "?foo=1"
+  [uri|{?foo,bar}|] @?= "?foo=1&bar=2"
+  where
+    foo :: Int
+    foo = 1
+    bar :: Int
+    bar = 2
 
-{-continuedQueryParams = do-}
-  {-[url|{&foo}|] @?= "&foo=1"-}
-  {-[url|{&foo,bar}|] @?= "&foo=1&bar=2"-}
-
+continuedQueryParams = do
+  [uri|{&foo}|] @?= "&foo=1"
+  [uri|{&foo,bar}|] @?= "&foo=1&bar=2"
+  where
+    foo :: Int
+    foo = 1
+    bar :: Int
+    bar = 2

@@ -21,6 +21,9 @@ instance ToTemplateValue Int SingleElement where
 instance ToTemplateValue a SingleElement => ToTemplateValue (ListElem [a]) ListElement where
   toTemplateValue = List . map toTemplateValue . fromListElem
 
+instance ToTemplateValue a SingleElement => ToTemplateValue [(String, a)] AssociativeListElement where
+  toTemplateValue = Associative . map (\(l, r) -> (l, toTemplateValue r))
+
 instance ToTemplateValue String SingleElement where
   toTemplateValue = Single
 
