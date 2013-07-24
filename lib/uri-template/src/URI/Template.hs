@@ -15,9 +15,6 @@ addChar = tell . singleton
 addString :: String -> StringBuilder ()
 addString = tell . fromList
 
-addSingle :: TemplateValue SingleElement -> StringBuilder ()
-addSingle (Single s) = addString s
-
 data Allow = Unreserved | UnreservedOrReserved
 
 data ProcessingOptions = ProcessingOptions
@@ -42,19 +39,19 @@ options m = case m of
   QueryContinuation -> option (Just '&') '&' True  (Just '=') Unreserved
   Fragment          -> option (Just '#') ',' False Nothing    UnreservedOrReserved
 
-templateValueIsEmpty :: TemplateValue a -> Bool
-templateValueIsEmpty (Single s) = null s
-templateValueIsEmpty (Associative s) = null s
-templateValueIsEmpty (List s) = null s
+templateValueIsEmpty :: InternalTemplateValue -> Bool
+templateValueIsEmpty (SingleVal s) = null s
+templateValueIsEmpty (AssociativeVal s) = null s
+templateValueIsEmpty (ListVal s) = null s
 
-namePrefix :: ProcessingOptions -> String -> TemplateValue a -> StringBuilder ()
+namePrefix :: ProcessingOptions -> String -> InternalTemplateValue -> StringBuilder ()
 namePrefix opts name val = do
   addString name
   if templateValueIsEmpty val
     then maybe (return ()) addChar $ modifierIfEmpty opts
     else addChar '='
 
-processVariable :: Modifier -> Bool -> Variable -> TemplateValue a -> StringBuilder ()
+processVariable :: Modifier -> Bool -> Variable -> InternalTemplateValue -> StringBuilder ()
 processVariable m isFirst (Variable varName varMod) val = do
   if isFirst
     then maybe (return ()) addChar $ modifierPrefix settings
@@ -70,35 +67,38 @@ processVariable m isFirst (Variable varName varMod) val = do
   where
     settings = options m
     sepByCommas = sequence_ . intersperse (addChar ',')
-    associativeCommas (n, v) = addString n >> addChar ',' >> addSingle v
+    associativeCommas (n, v) = addString n >> addChar ',' >> addString v
     unexploded = case val of
-      (Associative l) -> sepByCommas $ map associativeCommas l
-      (List l) -> sepByCommas $ map addSingle l
-      s@(Single _) -> addSingle s
+      (AssociativeVal l) -> sepByCommas $ map associativeCommas l
+      (ListVal l) -> sepByCommas $ map addString l
+      (SingleVal s) -> addString s
     explodedAssociative (k, v) = do
       addString k
       addChar '='
-      addSingle v
+      addString v
     exploded :: StringBuilder ()
     exploded = case val of
-      (Single s) -> do
+      (SingleVal s) -> do
         when (modifierSupportsNamed settings) (namePrefix settings varName val)
         addString s
-      (Associative l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map explodedAssociative l
-      (List l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map addSingle l
+      (AssociativeVal l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map explodedAssociative l
+      (ListVal l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map addString l
 
-processVariables :: forall a. [(String, TemplateValue a)] -> Modifier -> [Variable] -> StringBuilder ()
+processVariables :: [(String, InternalTemplateValue)] -> Modifier -> [Variable] -> StringBuilder ()
 processVariables env m vs = sequence_ $ intersperse (addChar $ modifierSeparator $ options m) $ processedVariables
   where
     findValue (Variable varName _) = lookup varName env
-    nonEmptyVariables :: [(Variable, TemplateValue a)]
+    nonEmptyVariables :: [(Variable, InternalTemplateValue)]
     nonEmptyVariables = catMaybes $ map (\v -> fmap (\mv -> (v, mv)) $ findValue v) vs
-    processors :: forall a. [Variable -> TemplateValue a -> StringBuilder ()]
+    processors :: [Variable -> InternalTemplateValue -> StringBuilder ()]
     processors = (processVariable m True) : repeat (processVariable m False)
     processedVariables :: [StringBuilder ()]
     processedVariables = zipWith uncurry processors nonEmptyVariables
 
-render :: forall a. UriTemplate -> [(String, TemplateValue a)] -> String
+render' :: forall a. UriTemplate -> [(String, TemplateValue a)] -> String
+render' tpl env = render tpl $ map (\(l, r) -> (l, internalize r)) env
+
+render :: UriTemplate -> [(String, InternalTemplateValue)] -> String
 render tpl env = toList $ execWriter $ mapM_ go tpl
   where
     go :: TemplateSegment -> StringBuilder ()

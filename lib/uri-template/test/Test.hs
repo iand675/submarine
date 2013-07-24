@@ -73,7 +73,7 @@ embedTestEnv = [("foo", Single "bar")]
 embedTest :: String -> String -> TestRegistry ()
 embedTest t expect = test $ do
   let (Right tpl) = parseTemplate "test" t
-  let rendered = render tpl embedTestEnv
+  let rendered = render' tpl embedTestEnv
   rendered @?= expect
 
 var :: String
@@ -126,7 +126,7 @@ pathTests = test $ do
   [uri|{/var:1,var}|] @?= "/v/value"
   [uri|{/list}|] @?= "/red,green,blue"
   [uri|{/list*}|] @?= "/red/green/blue"
-  {-[uri|{/list*,path:4}|] @?= "/red/green/blue/%2Ffoo"-}
+  [uri|{/list*,path:4}|] @?= "/red/green/blue/%2Ffoo"
   [uri|{/keys}|] @?= "/semi,%3B,dot,.,comma,%2C"
   [uri|{/keys*}|] @?= "/semi=%3B/dot=./comma=%2C"
 

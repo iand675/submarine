@@ -8,9 +8,22 @@ data ListElement
 newtype ListElem a = ListElem { fromListElem :: a }
 
 data TemplateValue a where
-	Single :: String -> TemplateValue SingleElement
-	Associative :: [(String, TemplateValue SingleElement)] -> TemplateValue AssociativeListElement
-	List :: [TemplateValue SingleElement] -> TemplateValue ListElement
+  Single :: String -> TemplateValue SingleElement
+  Associative :: [(String, TemplateValue SingleElement)] -> TemplateValue AssociativeListElement
+  List :: [TemplateValue SingleElement] -> TemplateValue ListElement
+
+data InternalTemplateValue
+  = SingleVal String
+  | AssociativeVal [(String, String)]
+  | ListVal [String]
+
+fromSingle (Single s) = s
+fromSingleVal (SingleVal s) = s
+
+internalize :: TemplateValue a -> InternalTemplateValue
+internalize (Single s) = SingleVal s
+internalize (Associative ls) = AssociativeVal $ map (\(l, r) -> (l, fromSingleVal $ internalize r)) ls
+internalize (List l) = ListVal $ map (fromSingleVal . internalize) l
 
 class ToTemplateValue a e | a -> e where
 	toTemplateValue :: a -> TemplateValue e

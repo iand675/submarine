@@ -43,7 +43,7 @@ templateToExp ts = [| render $(listE $ map segmentToExpr ts) $(templateValues) |
   where
     templateValues = listE $ map makePair vns
     vns = variableNames ts
-    makePair str = [| ($(litE $ StringL str), toTemplateValue $ $(varE $ mkName str)) |]
+    makePair str = [| ($(litE $ StringL str), internalize $ toTemplateValue $ $(varE $ mkName str)) |]
 
 -- AppE (VarE 'concat) $ ListE $ concatMap segmentToExp ts
 
