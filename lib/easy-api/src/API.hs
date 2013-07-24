@@ -17,9 +17,9 @@ data APIError = InvalidJSON | ExceptionalStatusCodeError String
 type RequestMiddleware = Request (ResourceT IO) -> Request (ResourceT IO)
 
 runAPIClient :: String -> RequestMiddleware -> APIClient a -> IO (Either APIError a)
-runAPIClient base m = withManager $ \man -> do
+runAPIClient base middleware m = withManager $ \man -> do
 	r <- parseUrl base
-	runEitherT $ runReaderT (fromAPIClient m) (r, man)
+	runEitherT $ runReaderT (fromAPIClient m) $ ClientSettings r man middleware
 
 jsonize :: (FromJSON a) => Response L.ByteString -> APIClient (Response a)
 jsonize r = APIClient $ case decode $ responseBody r of
@@ -37,38 +37,36 @@ newtype APIClient a = APIClient { fromAPIClient :: ReaderT ClientSettings (Eithe
 
 get :: FromJSON a => ByteString -> APIClient (Response (Maybe a))
 get p = APIClient $ do
-  (req, man) <- ask
+  (ClientSettings req man middleware) <- ask
   let r = req { path = p }
   resp <- lift $ lift $ httpLbs req man
   fromAPIClient $ jsonize resp
 
-
 put :: (ToJSON a, FromJSON b) => ByteString -> a -> APIClient (Response b)
 put p v = APIClient $ do
-  (req, man) <- ask
-  let r = req { method = "PUT", path = p, requestBody = RequestBodyLBS $ encode v }
+  (ClientSettings req man middleware) <- ask
+  let r = middleware $ req { method = "PUT", path = p, requestBody = RequestBodyLBS $ encode v }
   resp <- lift $ lift $ httpLbs r man
   fromAPIClient $ jsonize resp
 
-
 post :: (ToJSON a, FromJSON b) => ByteString -> a -> APIClient (Response b)
 post p v = APIClient $ do
-  (req, man) <- ask
-  let r = req { method = "POST", path = p, requestBody = RequestBodyLBS $ encode v }
+  (ClientSettings req man middleware) <- ask
+  let r = middleware $ req { method = "POST", path = p, requestBody = RequestBodyLBS $ encode v }
   resp <- lift $ lift $ httpLbs r man
   fromAPIClient $ jsonize resp
 
 patch :: (ToJSON a, FromJSON b) => ByteString -> a -> APIClient (Response b)
 patch p v = APIClient $ do
-  (req, man) <- ask
-  let r = req { method = "PATCH", path = p, requestBody = RequestBodyLBS $ encode v }
+  (ClientSettings req man middleware) <- ask
+  let r = middleware $ req { method = "PATCH", path = p, requestBody = RequestBodyLBS $ encode v }
   resp <- lift $ lift $ httpLbs r man
   fromAPIClient $ jsonize resp
 
 delete :: (ToJSON a, FromJSON b) => ByteString -> a -> APIClient (Response b)
 delete p v = APIClient $ do
-  (req, man) <- ask
-  let r = req { method = "DELETE", path = p, requestBody = RequestBodyLBS $ encode v }
+  (ClientSettings req man middleware) <- ask
+  let r = middleware $ req { method = "DELETE", path = p, requestBody = RequestBodyLBS $ encode v }
   resp <- lift $ lift $ httpLbs r man
   fromAPIClient $ jsonize resp
 
