@@ -5,6 +5,7 @@ import Data.DList hiding (map)
 import Data.List (intersperse)
 import Data.Maybe
 import Data.Monoid
+import Network.HTTP.Base (urlEncode)
 import URI.Types
 
 type StringBuilder = Writer (DList Char)
@@ -16,6 +17,9 @@ addString :: String -> StringBuilder ()
 addString = tell . fromList
 
 data Allow = Unreserved | UnreservedOrReserved
+
+allowEncoder Unreserved = urlEncode
+allowEncoder UnreservedOrReserved = id
 
 data ProcessingOptions = ProcessingOptions
   { modifierPrefix :: Maybe Char
@@ -63,26 +67,28 @@ processVariable m isFirst (Variable varName varMod) val = do
     Explode -> exploded
     (MaxLength l) -> do
       when (modifierSupportsNamed settings) (namePrefix settings varName val)
+      -- TODO: this is wrong. we need to truncate prior to encoding.
       censor (fromList . take l . toList) unexploded
   where
     settings = options m
+    addEncodeString = addString . (allowEncoder $ modifierAllow settings)
     sepByCommas = sequence_ . intersperse (addChar ',')
-    associativeCommas (n, v) = addString n >> addChar ',' >> addString v
+    associativeCommas (n, v) = addEncodeString n >> addChar ',' >> addEncodeString v
     unexploded = case val of
       (AssociativeVal l) -> sepByCommas $ map associativeCommas l
-      (ListVal l) -> sepByCommas $ map addString l
-      (SingleVal s) -> addString s
+      (ListVal l) -> sepByCommas $ map addEncodeString l
+      (SingleVal s) -> addEncodeString s
     explodedAssociative (k, v) = do
-      addString k
+      addEncodeString k
       addChar '='
-      addString v
+      addEncodeString v
     exploded :: StringBuilder ()
     exploded = case val of
       (SingleVal s) -> do
         when (modifierSupportsNamed settings) (namePrefix settings varName val)
-        addString s
+        addEncodeString s
       (AssociativeVal l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map explodedAssociative l
-      (ListVal l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map addString l
+      (ListVal l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map addEncodeString l
 
 processVariables :: [(String, InternalTemplateValue)] -> Modifier -> [Variable] -> StringBuilder ()
 processVariables env m vs = sequence_ $ processedVariables
