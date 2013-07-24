@@ -85,7 +85,7 @@ processVariable m isFirst (Variable varName varMod) val = do
       (ListVal l) -> sequence_ $ intersperse (addChar $ modifierSeparator settings) $ map addString l
 
 processVariables :: [(String, InternalTemplateValue)] -> Modifier -> [Variable] -> StringBuilder ()
-processVariables env m vs = sequence_ $ intersperse (addChar $ modifierSeparator $ options m) $ processedVariables
+processVariables env m vs = sequence_ $ processedVariables
   where
     findValue (Variable varName _) = lookup varName env
     nonEmptyVariables :: [(Variable, InternalTemplateValue)]
