@@ -1,3 +1,14 @@
+module Twilio where
+import API
+import URI.TH
+
+newtype Twilio a = Twilio { fromTwilio :: APIClient a }
+  deriving (Functor, Applicative, Monad, MonadIO)
+
+-- TODO get easy-api to append API routes instead of overwriting the base path portion.
+{-runTwilio :: AccountSid -> AuthToken -> Twilio a -> IO (Either APIError a)-}
+{-runTwilio sid authToken = runAPIClient "https://api.twilio.com/2010-04-01" (applyBasicAuth sid authToken) . fromTwilio-}
+
 
 -- REST API
 {-

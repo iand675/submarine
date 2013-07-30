@@ -1,0 +1,14 @@
+name:                twilio
+version:             0.1.0.0
+homepage:            http://github.com/iand675/submarine
+license-file:        LICENSE
+author:              Ian Duncan
+maintainer:          ian@iankduncan.com
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.8
+
+library
+  exposed-modules:     Twilio
+  build-depends:       base ==4.6.*, mtl ==2.1.*, lens, aeson, http-conduit, easy-api, uri-template
+  hs-source-dirs:      src

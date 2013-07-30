@@ -1,21 +1,21 @@
 require 'active_support/inflector'
 
 libs = {
-  amqp: 'amqp',
-  elastic_search: 'elastic-search',
-  api: 'easy-api',
-  digitalocean: 'digitalocean',
-  github: 'github',
-  hypermedia: 'hypermedia',
-  intercom: 'intercom',
-  mandrill: 'mandrill',
-  metrics: 'metrics',
-  newrelic: 'newrelic',
-  postgres_uuid: 'postgres-simple-uuid',
-  stripe: 'stripe',
-  twilio: 'twilio',
-  uri: 'uri-template',
-  redis_simple: 'whodis'
+  amqp: { name: 'amqp', local_dependencies: [] },
+  elastic_search: { name: 'elastic-search', local_dependencies: [:easy_api, :uri_template] },
+  api: { name: 'easy-api', local_dependencies: [] },
+  digitalocean: { name: 'digitalocean', local_dependencies: [] },
+  github: { name: 'github', local_dependencies: ['easy-api', 'uri-template'] },
+  hypermedia: { name: 'hypermedia', local_dependencies: [] },
+  intercom: { name: 'intercom', local_dependencies: ['easy-api', 'uri-template'] },
+  mandrill: { name: 'mandrill', local_dependencies: ['easy-api', 'uri-template'] },
+  metrics: { name: 'metrics', local_dependencies: [] },
+  newrelic: { name: 'newrelic', local_dependencies: [] },
+  postgres_uuid: { name: 'postgres-simple-uuid', local_dependencies: [] },
+  stripe: { name: 'stripe', local_dependencies: ['easy-api', 'uri-template'] },
+  twilio: { name: 'twilio', local_dependencies: ['easy-api', 'uri-template'] },
+  uri: { name: 'uri-template', local_dependencies: [] },
+  redis_simple: { name: 'whodis', local_dependencies: [] }
 }
 
 
@@ -23,8 +23,9 @@ task :default => (libs.keys.map {|k| "lib:#{k}:test" }) do
 
 end
 
-def cabal_tasks(lib_name, dir)
+def cabal_tasks(lib_name, lib_info)
   namespace lib_name do
+    dir = "lib/#{lib_info[:name]}"
     human_lib_name = ActiveSupport::Inflector.humanize lib_name
     tests_exist = false
     benchmarks_exist = false
@@ -58,6 +59,12 @@ def cabal_tasks(lib_name, dir)
         sh 'cabal-dev test'
       end
     end
+
+    desc :add_sources => do
+      lib_info[:local_dependencies].each |d| do
+
+      end
+    end
   end
 end
 
@@ -84,7 +91,7 @@ namespace :server do
 end
 
 namespace :lib do
-  libs.each {|lib_name, dir_name| cabal_tasks lib_name, "lib/#{dir_name}" }
+  libs.each {|lib_name, lib_info| cabal_tasks lib_name, lib_info }
 end
 
 namespace :frontend do
