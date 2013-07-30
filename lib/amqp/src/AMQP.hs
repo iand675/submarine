@@ -25,7 +25,7 @@ declareExchange :: ExchangeOpts -> AMQP ()
 deleteExchange :: Exchange -> AMQP ()
 declareQueue :: QueueOpts -> AMQP (Text, Int, Int)
 bindQueue :: Queue -> Exchange -> RoutingKey a -> AMQP ()
-bindQueue' :: Qeuue -> Exchange -> RoutingKey a -> FieldTable -> AMQP ()
+bindQueue' :: Queue -> Exchange -> RoutingKey a -> FieldTable -> AMQP ()
 purgeQueue :: Queue -> AMQP Word32
 deleteQueue :: Queue -> AMQP Word32
 -- consumeMsgs :: 
