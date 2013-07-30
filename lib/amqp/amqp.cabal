@@ -19,5 +19,5 @@ library
   exposed-modules:     AMQP
   -- other-modules:       
   -- could add pipes to the dependencies if we wanted to do some wrapping with pipes too
-  build-depends:       base ==4.6.*, amqp ==0.4.*, aeson ==0.6.*
+  build-depends:       base ==4.6.*, amqp ==0.4.*, mtl, text
   hs-source-dirs:      src
