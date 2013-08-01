@@ -5,19 +5,18 @@ libs = {
   elastic_search: { name: 'elastic-search', local_dependencies: [:easy_api, :uri_template] },
   api: { name: 'easy-api', local_dependencies: [] },
   digitalocean: { name: 'digitalocean', local_dependencies: [] },
-  github: { name: 'github', local_dependencies: ['easy-api', 'uri-template'] },
+  github: { name: 'github', local_dependencies: [:easy_api, :uri_template] },
   hypermedia: { name: 'hypermedia', local_dependencies: [] },
-  intercom: { name: 'intercom', local_dependencies: ['easy-api', 'uri-template'] },
-  mandrill: { name: 'mandrill', local_dependencies: ['easy-api', 'uri-template'] },
+  intercom: { name: 'intercom', local_dependencies: [:easy_api, :uri_template] },
+  mandrill: { name: 'mandrill', local_dependencies: [:easy_api, :uri_template] },
   metrics: { name: 'metrics', local_dependencies: [] },
   newrelic: { name: 'newrelic', local_dependencies: [] },
   postgres_uuid: { name: 'postgres-simple-uuid', local_dependencies: [] },
-  stripe: { name: 'stripe', local_dependencies: ['easy-api', 'uri-template'] },
-  twilio: { name: 'twilio', local_dependencies: ['easy-api', 'uri-template'] },
+  stripe: { name: 'stripe', local_dependencies: [:easy_api, :uri_template] },
+  twilio: { name: 'twilio', local_dependencies: [:easy_api, :uri_template] },
   uri: { name: 'uri-template', local_dependencies: [] },
   redis_simple: { name: 'whodis', local_dependencies: [] }
 }
-
 
 task :default => (libs.keys.map {|k| "lib:#{k}:test" }) do
 
@@ -49,7 +48,7 @@ def cabal_tasks(lib_name, lib_info)
     desc "Builds the #{human_lib_name} library."
     task :build => [:configure] do
       Dir.chdir(dir) do
-        sh 'cabal-dev build'
+        sh 'cabal-dev install'
       end
     end
 
@@ -57,12 +56,6 @@ def cabal_tasks(lib_name, lib_info)
     task :test => [:build] do
       Dir.chdir(dir) do
         sh 'cabal-dev test'
-      end
-    end
-
-    desc :add_sources => do
-      lib_info[:local_dependencies].each |d| do
-
       end
     end
   end
