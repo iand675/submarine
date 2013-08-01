@@ -14,6 +14,6 @@ cabal-version:       >=1.8
 
 library
   exposed-modules:     DigitalOcean
-  build-depends:       base ==4.6.*, lens, mtl, easy-api, uri-template
+  build-depends:       base ==4.6.*, lens, mtl, easy-api, uri-templater, bytestring, aeson, resourcet, either, text, http-conduit
   hs-source-dirs:      src
 

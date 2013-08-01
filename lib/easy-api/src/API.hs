@@ -35,11 +35,11 @@ data ClientSettings = ClientSettings
 newtype APIClient a = APIClient { fromAPIClient :: ReaderT ClientSettings (EitherT APIError (ResourceT IO)) a }
 	deriving (Functor, Applicative, Monad, MonadIO)
 
-get :: FromJSON a => ByteString -> APIClient (Response (Maybe a))
+get :: FromJSON a => ByteString -> APIClient (Response a)
 get p = APIClient $ do
   (ClientSettings req man middleware) <- ask
   let r = req { path = p }
-  resp <- lift $ lift $ httpLbs req man
+  resp <- lift $ lift $ httpLbs r man
   fromAPIClient $ jsonize resp
 
 put :: (ToJSON a, FromJSON b) => ByteString -> a -> APIClient (Response b)

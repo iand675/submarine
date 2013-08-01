@@ -1,5 +1,6 @@
-{-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
-module Network.DigitalOcean where
+{-# LANGUAGE TemplateHaskell, QuasiQuotes, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, GeneralizedNewtypeDeriving, OverloadedStrings, FlexibleContexts #-}
+module DigitalOcean where
+import qualified API
 import Control.Applicative
 import Control.Lens
 import Control.Lens.TH
@@ -7,10 +8,14 @@ import Control.Monad.Reader
 import Control.Monad.Trans
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Resource
+import Data.Aeson
 import Data.Aeson.TH
-import Data.ByteString (ByteString)
+import Data.ByteString.Char8 (ByteString, pack)
+import qualified Data.Text as T
 import Data.List
-import qualified Network.API as API
+import Network.HTTP.Conduit hiding (port)
+import URI.TH
+import URI.Types
 
 type DropletId = Int
 type ImageId = Int
@@ -128,263 +133,295 @@ makeFields ''Domain
 makeFields ''DomainRecord
 makeFields ''NewRecord
 
+deriveJSON Prelude.id ''Credentials
+deriveJSON Prelude.id ''NewDropletOptions
+deriveJSON Prelude.id ''Droplet
+deriveJSON Prelude.id ''NewDroplet
+deriveJSON Prelude.id ''Event
+deriveJSON Prelude.id ''Region
+deriveJSON Prelude.id ''Image
+deriveJSON Prelude.id ''SshKeyInfo
+deriveJSON Prelude.id ''SshKey
+deriveJSON Prelude.id ''SizeOption
+deriveJSON Prelude.id ''Domain
+deriveJSON Prelude.id ''DomainRecord
+deriveJSON Prelude.id ''NewRecord
+
 data ImageType = MyImages | Global
 
-instance API.ParameterEncodable ImageType where
-	paramEncode MyImages = Just "my_images"
-	paramEncode Global = Just "global"
+instance ToTemplateValue T.Text SingleElement where
+  toTemplateValue = Single . T.unpack
 
-instance API.ToRouteParameters NewDropletOptions where
-	toParams x =
-		[ ("name", p x name)
-		, ("size_id", p x sizeId)
-		, ("image_id", p x imageId)
-		, ("region_id", p x regionId)
-		, ("ssh_key_ids", p x sshKeyIds)
+instance (ToTemplateValue a SingleElement) => ToTemplateValue (Maybe a) SingleElement where
+  toTemplateValue Nothing = Single ""
+  toTemplateValue (Just v) = toTemplateValue v
+
+instance ToTemplateValue ImageType SingleElement where
+	toTemplateValue MyImages = Single "my_images"
+	toTemplateValue Global = Single "global"
+
+instance ToTemplateValue [SshKeyId] SingleElement where
+  toTemplateValue ks = Single $ intercalate "," $ map show ks
+
+instance ToTemplateValue Credentials AssociativeListElement where
+  toTemplateValue x = Associative
+    [ ("api_key", toTemplateValue $ x ^. apiKey)
+    , ("client_id", toTemplateValue $ x ^. clientId)
+    ]
+
+instance ToTemplateValue NewDropletOptions AssociativeListElement where
+	toTemplateValue x = Associative
+		[ ("name", toTemplateValue $ x ^. name)
+		, ("size_id", toTemplateValue $ x ^. sizeId)
+		, ("image_id", toTemplateValue $ x ^. imageId)
+		, ("region_id", toTemplateValue $ x ^. regionId)
+		, ("ssh_key_ids", toTemplateValue $ x ^. sshKeyIds)
 		]
 
-instance API.ToRouteParameters NewRecord where
-	toParams x =
-		[ ("record_type", p x recordType)
-		, ("data", p x info)
-		, ("name", p x name)
-		, ("priority", p x priority)
-		, ("port", p x port)
-		, ("weight", p x weight)
+instance ToTemplateValue NewRecord AssociativeListElement where
+	toTemplateValue x = Associative
+		[ ("record_type", toTemplateValue $ x ^. recordType)
+		, ("data", toTemplateValue $ x ^. info)
+		, ("name", toTemplateValue $ x ^. name)
+		, ("priority", toTemplateValue $ x ^. priority)
+		, ("port", toTemplateValue $ x ^. port)
+		, ("weight", toTemplateValue $ x ^. weight)
 		]
 
-newtype DigitalOcean a = DigitalOcean { fromDigitalOcean :: APIClient a }
+newtype DigitalOcean a = DigitalOcean { fromDigitalOcean :: ReaderT Credentials API.APIClient a }
 	deriving (Functor, Applicative, Monad, MonadIO)
 
-runDigitalOcean :: Credentials -> DigitalOcean a -> IO (Either APIError a)
-runDigitalOcean c m = runAPIClient
+runDigitalOcean :: Credentials -> DigitalOcean a -> IO (Either API.APIError a)
+runDigitalOcean c m = API.runAPIClient
   "https://api.digitalocean.com/"
-  id
+  Prelude.id
   (runReaderT (fromDigitalOcean m) c)
 
-get :: FromJSON a => String -> DigitalOcean a
-get = DigitalOcean . lift . API.get
+get :: FromJSON a => String -> DigitalOcean (Response a)
+get = DigitalOcean . lift . API.get . pack
 
 creds :: DigitalOcean Credentials
 creds = DigitalOcean ask
 
 -- | /droplets
-getDroplets :: DigitalOcean [Droplet]
-getDroplets = get [uri| /droplets{?credentials?} |]
+getDroplets :: DigitalOcean (Response [Droplet])
+getDroplets = do
+  credentials <- creds
+  get [uri| /droplets{?credentials*} |]
 
 ---- | /droplets/new
-addDroplet :: NewDropletOptions -> DigitalOcean NewDroplet
+addDroplet :: NewDropletOptions -> DigitalOcean (Response NewDroplet)
 addDroplet newDroplet = do
   credentials <- creds
   get [uri| /droplets/new{?newDroplet*, credentials*} |]
 
 ---- | /droplets/{dropletId}
-getDroplet :: DropletId -> DigitalOcean (Maybe Droplet)
+getDroplet :: DropletId -> DigitalOcean (Response Droplet)
 getDroplet dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}{?credentials*} |]
 
 ---- /droplets/{dropletId}/reboot
-rebootDroplet :: DropletId -> DigitalOcean (Maybe Event)
+rebootDroplet :: DropletId -> DigitalOcean (Response Event)
 rebootDroplet dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/reboot{?credentials*} |]
 
 ---- /droplets/{dropletId}/power_cycle
-powerCycleDroplet :: DropletId -> DigitalOcean (Maybe Event)
+powerCycleDroplet :: DropletId -> DigitalOcean (Response Event)
 powerCycleDroplet dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/power_cycle{?credentials*} |]
 
 ---- /droplets/{dropletId}/shutdown
-shutdownDroplet :: DropletId -> DigitalOcean (Maybe Event)
+shutdownDroplet :: DropletId -> DigitalOcean (Response Event)
 shutdownDroplet dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/shutdown{?credentials*} |]
 
 ---- /droplets/{dropletId}/power_off
-powerOffDroplet :: DropletId -> DigitalOcean (Maybe Event)
+powerOffDroplet :: DropletId -> DigitalOcean (Response Event)
 powerOffDroplet dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/power_off{?credentials*} |]
 
 ---- /droplets/{dropletId}/power_on
-powerOnDroplet :: DropletId -> DigitalOcean (Maybe Event)
+powerOnDroplet :: DropletId -> DigitalOcean (Response Event)
 powerOnDroplet dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/power_on{?credentials*} |]
 
 ---- /droplets/{dropletId}/password_reset
-resetRootDropletPassword :: DropletId -> DigitalOcean (Maybe Event)
+resetRootDropletPassword :: DropletId -> DigitalOcean (Response Event)
 resetRootDropletPassword dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/password_reset{?credentials*} |]
 
 ---- /droplets/{dropletId}/resize
-resizeDroplet :: DropletId -> SizeOptionId -> DigitalOcean (Maybe Event)
+resizeDroplet :: DropletId -> SizeOptionId -> DigitalOcean (Response Event)
 resizeDroplet dropletId sizeId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/resize{?credentials*} |]
 	where size_id = sizeId
 
 ---- /droplets/{dropletId}/snapshot
-takeDropletSnapshot :: DropletId -> Maybe T.Text -> DigitalOcean (Maybe Event)
+takeDropletSnapshot :: DropletId -> Maybe T.Text -> DigitalOcean (Response Event)
 takeDropletSnapshot dropletId name = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/snapshot{?name, credentials*} |]
 
 ---- /droplets/{dropletId}/restore
-restoreDroplet :: DropletId -> ImageId -> DigitalOcean (Maybe Event)
+restoreDroplet :: DropletId -> ImageId -> DigitalOcean (Response Event)
 restoreDroplet dropletId imageId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/restore{?image_id, credentials*} |]
 	where image_id = imageId
 
 ---- /droplets/{dropletId}/rebuild
-rebuildDroplet :: DropletId -> ImageId -> DigitalOcean (Maybe Event)
+rebuildDroplet :: DropletId -> ImageId -> DigitalOcean (Response Event)
 rebuildDroplet dropletId imageId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/rebuild{?image_id, credentials*} |]
 	where image_id = imageId
 
 ---- /droplets/{dropletId}/enable_backups
-enableDropletBackups :: DropletId -> DigitalOcean (Maybe Event)
+enableDropletBackups :: DropletId -> DigitalOcean (Response Event)
 enableDropletBackups dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/enable_backups{?credentials*} |]
 
 ---- /droplets/{dropletId}/disable_backups
-disableDropletBackups :: DropletId -> DigitalOcean (Maybe Event)
+disableDropletBackups :: DropletId -> DigitalOcean (Response Event)
 disableDropletBackups dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/disable_backups{?credentials*} |]
 
 ---- /droplets/{dropletId}/rename
-renameDroplet :: DropletId -> String -> DigitalOcean (Maybe Event)
+renameDroplet :: DropletId -> String -> DigitalOcean (Response Event)
 renameDroplet dropletId name = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/rename{?name, credentials*} |]
 
 ---- /droplets/{dropletId}/destroy
-destroyDroplet :: DropletId -> DigitalOcean (Maybe Event)
+destroyDroplet :: DropletId -> DigitalOcean (Response Event)
 destroyDroplet dropletId = do
   credentials <- creds
   get [uri| /droplets/{dropletId}/destroy{?credentials*} |]
 
 ---- /regions
-getRegions :: DigitalOcean [Region]
+getRegions :: DigitalOcean (Response [Region])
 getRegions = do
   credentials <- creds
   get [uri| /regions{?credentials*} |]
 
 ---- /images
-getImages :: Maybe ImageType -> DigitalOcean [Image]
+getImages :: Maybe ImageType -> DigitalOcean (Response [Image])
 getImages filter = do
   credentials <- creds
   get [uri| /images{?filter, credentials*} |]
 
 ---- /images/{imageId}
-getImage :: ImageId -> DigitalOcean (Maybe Image)
+getImage :: ImageId -> DigitalOcean (Response Image)
 getImage imageId = do
   credentials <- creds
   get [uri| /images/{imageId}{?credentials*} |]
 
 ---- /images/{imageId}/destroy
-destroyImage :: ImageId -> DigitalOcean ()
+destroyImage :: ImageId -> DigitalOcean (Response ())
 destroyImage imageId = do
   credentials <- creds
   get [uri| /images/{imageId}/destroy{?credentials*} |]
 
 ---- /images/{imageId}/transfer
-transferImage :: ImageId -> RegionId -> DigitalOcean (Maybe Event)
+transferImage :: ImageId -> RegionId -> DigitalOcean (Response Event)
 transferImage imageId regionId = do
   credentials <- creds
   get [uri| /images/{imageId}/transfer{?region_id, credentials*} |]
 	where region_id = regionId
 
 ---- /ssh_keys
-getSshKeys :: DigitalOcean [SshKeyInfo]
+getSshKeys :: DigitalOcean (Response [SshKeyInfo])
 getSshKeys = do
   credentials <- creds
   get [uri| /ssh_keys{?credentials*} |]
 
 ---- /ssh_keys/new
-addSshKey :: String -> String -> DigitalOcean NewSshKey
+addSshKey :: String -> String -> DigitalOcean (Response NewSshKey)
 addSshKey name sshKeyPub = do
   credentials <- creds
   get [uri| /ssh_keys/new{?name, ssh_key_pub, credentials*} |]
 	where ssh_key_pub = sshKeyPub
 
 ---- /ssh_key/{sshKeyId}
-getSshKey :: SshKeyId -> DigitalOcean (Maybe SshKey)
-getSshKey sshKetId = do
+getSshKey :: SshKeyId -> DigitalOcean (Response SshKey)
+getSshKey sshKeyId = do
   credentials <- creds
   get [uri| /ssh_key/{sshKeyId}{?credentials*} |]
 
 ---- /ssh_key/{sshKeyId}/edit
-editSshKey :: SshKeyId -> String -> DigitalOcean SshKey
-editSshKey sshIdKey sshKeyPub = do
+editSshKey :: SshKeyId -> String -> DigitalOcean (Response SshKey)
+editSshKey sshKeyId sshKeyPub = do
   credentials <- creds
   get [uri| /ssh_key/{sshKeyId}/edit{?ssh_key_pub, credentials*} |]
 	where ssh_key_pub = sshKeyPub
 
 ---- /ssh_key/{sshKeyId}/destroy
-removeSshKey :: SshKeyId -> DigitalOcean Bool
+removeSshKey :: SshKeyId -> DigitalOcean (Response Bool)
 removeSshKey sshKeyId = do
   credentials <- creds
   get [uri| /ssh_key/{sshKeyId}/destroy{?credentials*} |]
 
 ---- /sizes
-getInstanceSizeOptions :: DigitalOcean [SizeOption]
+getInstanceSizeOptions :: DigitalOcean (Response [SizeOption])
 getInstanceSizeOptions = do
   credentials <- creds
   get [uri| /sizes{?credentials*} |]
 
 ---- /domains
-getDomains :: DigitalOcean [Domain]
+getDomains :: DigitalOcean (Response [Domain])
 getDomains = do
   credentials <- creds
   get [uri| /domains{?credentials*} |]
 
 ---- /domains/new
-addDomain :: T.Text -> IpAddress -> DigitalOcean NewDomain
+addDomain :: T.Text -> IpAddress -> DigitalOcean (Response NewDomain)
 addDomain name ipAddress = do
   credentials <- creds
   get [uri| /domains/new{?name, ip_address, credentials*} |]
 	where ip_address = ipAddress
 
 ---- /domains/{domainId}
-getDomain :: DomainId -> DigitalOcean (Maybe Domain)
+getDomain :: DomainId -> DigitalOcean (Response Domain)
 getDomain domainId = do
   credentials <- creds
   get [uri| /domains/{domainId}{?credentials*} |]
 
 ---- /domains/{domainId}/destroy
-removeDomain :: DomainId -> DigitalOcean Bool
+removeDomain :: DomainId -> DigitalOcean (Response Bool)
 removeDomain domainId = do
   credentials <- creds
   get [uri| /domains/{domainId}/destroy{?credentials*} |]
 
 ---- /domains/{domainId}/records
-getDomainRecords :: DomainId -> DigitalOcean [DomainRecord]
+getDomainRecords :: DomainId -> DigitalOcean (Response [DomainRecord])
 getDomainRecords domainId = do
   credentials <- creds
   get [uri| /domains/{domainId}/records{?credentials*} |]
 
 ---- /domains/{domainId}/records/new
-addDomainRecord :: DomainId -> NewRecord -> DigitalOcean DomainRecord
+addDomainRecord :: DomainId -> NewRecord -> DigitalOcean (Response DomainRecord)
 addDomainRecord domainId newRecord = do
   credentials <- creds
   get [uri| /domains/{domainId}/records/new{?newRecord*, credentials*} |]
 
 ---- /domains/{domainId}/records/{recordId}
-getDomainRecord :: DomainId -> RecordId -> DigitalOcean (Maybe DomainRecord)
+getDomainRecord :: DomainId -> RecordId -> DigitalOcean (Response DomainRecord)
 getDomainRecord domainId recordId = do
   credentials <- creds
   get [uri| /domains/{domainId}/records/{recordId}{?credentials*} |]
 
 ---- /domains/{domainId}/records/{recordId}/destroy
-removeDomainRecord :: DomainId -> RecordId -> DigitalOcean Bool
+removeDomainRecord :: DomainId -> RecordId -> DigitalOcean (Response Bool)
 removeDomainRecord domainId recordId = do
   credentials <- creds
   get [uri| /domains/{domainId}/records/{recordId}/destroy{?credentials*} |]
