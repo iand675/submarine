@@ -1,4 +1,5 @@
 module GitHub.Git.Commits where
+import GitHub.Internal
 
 commits o r = ownerRepo o r <> "/commits"
 commit o r s = ownerRepo o r <> "/" <> s

@@ -1,4 +1,5 @@
 module GitHub.Gitignore where
+import GitHub.Internal
 
 templates = "/gitignore/templates"
 templates t = (templates <> "/" <> t)

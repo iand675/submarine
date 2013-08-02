@@ -1,4 +1,5 @@
 module GitHub.Repositories.Comments where
+import GitHub.Internal
 
 shaComment s = ["/commits/", s, "/comments"]
 commentId i = ["/comments", i]

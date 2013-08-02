@@ -1,39 +1,42 @@
 module GitHub.Users.Keys where
+import GitHub.Internal
 
-currentUserKeys = currentUserKeys <> "/keys"
-currentUserKey i = currentUserKeys <> "/" <> i
+userKeys u = [uri| /users/{u}/keys |]
+currentUserKeys = [uri| /users/keys |]
+currentUserKey i = [uri| /users/keys/{i} |]
 
---| GET /users/:user/keys
+-- | GET /users/:user/keys
 listUserKeys ::
 	UserName ->
 	GitHub PublicUserKeysData
+listUserKeys = get . userKeys
 
---| GET /user/keys
+-- | GET /user/keys
 listCurrentUserKeys ::
 	GitHub UserKeysData
-listCurrentUserKeys = ghGet [] currentUserKeys
+listCurrentUserKeys = get "/user/keys"
 
---| GET /user/keys/:id
+-- | GET /user/keys/:id
 getKey ::
 	Int ->
 	GitHub UserKeyData
-getKey = ghGet [] . currentUserKey
+getKey = get . currentUserKey
 
---| POST /user/keys
+-- | POST /user/keys
 createKey ::
 	NewKey ->
 	GitHub UserKeyData
-createKey = ghPost currentUserKeys
+createKey = post currentUserKeys
 
---| PATCH /user/keys
+-- | PATCH /user/keys
 updateKey ::
 	Int ->
 	KeyPatch ->
 	GitHub UserKeyData
-updateKey i = ghPatch (currentUserKey i)
+updateKey i = patch (currentUserKey i)
 
---| DELETE /user/keys/:id
+-- | DELETE /user/keys/:id
 deleteKey ::
 	Int ->
 	GitHub ()
-deleteKey i = ghDelete . currentUserKey
+deleteKey i = delete . currentUserKey

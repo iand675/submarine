@@ -1,4 +1,5 @@
 module GitHub.Activity.Notifications where
+import GitHub.Internal
 
 notifications = "/notifications"
 thread i = notifications <> "/threads/" <> i

@@ -1,4 +1,5 @@
 module GitHub.PullRequests where
+import GitHub.Internal
 
 pulls o r = ownerRepo o r <> "/pulls"
 pull o r i = pulls o r <> "/" <> i

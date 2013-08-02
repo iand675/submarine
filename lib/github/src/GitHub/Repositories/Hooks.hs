@@ -1,4 +1,5 @@
 module GitHub.Repositories.Hooks where
+import GitHub.Internal
 
 hooks o r = ownerRepo o r <> "/hooks"
 hook o r i = hooks o r <> "/" <> i

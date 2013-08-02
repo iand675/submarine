@@ -1,4 +1,5 @@
 module GitHub.Gists.Comments where
+import GitHub.Internal
 
 gistComments i = "/gists/" <> i <> "/comments"
 gistComment gi ci = gistComments gi <> "/" <> ci

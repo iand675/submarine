@@ -1,4 +1,5 @@
 module GitHub.Git.Blobs where
+import GitHub.Internal
 
 --| GET /repos/:owner/:repo/git/blobs/:sha
 getBlob ::

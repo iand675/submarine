@@ -1,4 +1,5 @@
 module GitHub.Repositories.Contents where
+import GitHub.Internal
 
 contents o r p = ownerRepo <> "/contents/" <> p
 --| GET /repos/:owner/:repo/readme

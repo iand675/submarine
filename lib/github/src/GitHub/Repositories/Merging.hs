@@ -1,4 +1,5 @@
 module GitHub.Repositories.Merging where
+import GitHub.Internal
 
 --| POST /repos/:owner/:repo/merges
 performMerge ::

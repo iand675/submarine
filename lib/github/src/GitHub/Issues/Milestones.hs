@@ -1,4 +1,5 @@
 module GitHub.Issues.Milestones where
+import GitHub.Internal
 
 milestones o r = ownerRepo o r <> "/milestones"
 milestone o r i = milestones o r <> "/" <> i

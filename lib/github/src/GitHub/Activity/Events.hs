@@ -1,72 +1,74 @@
+{-# LANGUAGE QuasiQuotes #-}
 module GitHub.Activity.Events where
+import GitHub.Internal
 
 events = "/events"
 repoEvents o r = ownerRepo o r <> events
 issueEvents o r = ownerRepo o r <> "/issues" <> events
-networkEvents o r = "/networks/" <> o <> "/" <> r <> "/events"
-org o = "/orgs/" <> o
-orgEvents o = org o <> "/events"
-users u = "/users/" <> u
+networkEvents o r = [uri| /networks/{o}/{r}/events |]
+orgEvents o = [uri|/orgs/{o}/events |]
+users u = [uri| /users/{u} |]
 
---| GET /events
+-- | GET /events
 listPublicEvents ::
-	GitHub EventsData
-listPublicEvents = ghGet [] events
+	GitHub (Request EventsData)
+listPublicEvents = get events
 
---| GET /repos/:owner/:repo/events
+-- | GET /repos/:owner/:repo/events
 listRepositoryEvents ::
 	OwnerName ->
 	RepoName ->
 	GitHub EventsData
-listRepositoryEvents o r = ghGet [] $ repoEvents o r
+listRepositoryEvents o r = get $ repoEvents o r
 
---| GET /repos/:owner/:repo/issues/events
+-- | GET /repos/:owner/:repo/issues/events
 listIssueEvents ::
 	OwnerName ->
 	RepoName ->
 	GitHub EventsData
-listIssueEvents o r = ghGet [] $ issueEvents o r
+listIssueEvents o r = get $ issueEvents o r
 
---| GET /networks/:owner/:repo/events
+-- | GET /networks/:owner/:repo/events
 listRepositoryNetworkEvents ::
 	OwnerName ->
 	RepoName ->
 	GitHub EventsData
-listRepositoryNetworkEvents o r = ghGet [] $ networkEvents o r
+listRepositoryNetworkEvents o r = get $ networkEvents o r
 
---| GET /orgs/:org/events
+-- | GET /orgs/:org/events
 listPublicOrganizationEvents ::
 	OrgName ->
 	GitHub EventsData
-listPublicOrganizationEvents o = ghGet [] $ orgEvents o
+listPublicOrganizationEvents o = get $ orgEvents o
 
---| GET /users/:user/received_events
+-- | GET /users/:user/received_events
 listUserReceivedEvents ::
 	UserName ->
 	GitHub EventsData
-listUserReceivedEvents u = get [] (users u <> "/received_events"
+listUserReceivedEvents u = get (users u <> "/received_events")
 
---| GET /users/:user/received_events/public
+-- | GET /users/:user/received_events/public
 listPublicUserReceivedEvents ::
 	UserName ->
 	GitHub EventsData
-listPublicUserReceivedEvents u = get [] (user u <> "/received_events/public")
+listPublicUserReceivedEvents u = get (user u <> "/received_events/public")
 
---| GET /users/:user/events
+-- | GET /users/:user/events
 listUserPerformedEvents ::
 	UserName ->
 	GitHub EventsData
-listUserPerformedEvents u = get [] (user u <> events)
+listUserPerformedEvents u = get (user u <> events)
 
---| GET /users/:user/events/public
+-- | GET /users/:user/events/public
 listPublicUserPerformedEvents ::
 	UserName ->
 	GitHub EventsData
-listPublicUserPerformedEvents = get [] (user u <> events <> "/public")
+listPublicUserPerformedEvents = get (user u <> events <> "/public")
 
---| GET /users/:user/events/orgs/:org
+-- | GET /users/:user/events/orgs/:org
 listUserOrganizationEvents ::
 	UserName ->
 	OrgName ->
 	GitHub EventsData
-listUserOrganizationEvents
+listUserOrganizationEvents = undefined -- TODO TODO TODO
+

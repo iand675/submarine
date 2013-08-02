@@ -1,4 +1,5 @@
 module GitHub.Issues.Assignees where
+import GitHub.Internal
 
 assignees o r = ownerRepo o r <> "/assignees"
 assignee o r a = assignees o r <> "/" <> a

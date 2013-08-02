@@ -1,4 +1,5 @@
 module GitHub.Activity.Watching where
+import GitHub.Internal
 
 subscription u r = ownedRepo u r <> "/subscription"
 

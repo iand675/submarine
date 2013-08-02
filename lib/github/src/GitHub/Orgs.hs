@@ -1,4 +1,5 @@
 module GitHub.Orgs where
+import GitHub.Internal
 
 orgs = "/orgs"
 org o = orgs <> "/" <> o

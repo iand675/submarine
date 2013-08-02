@@ -1,4 +1,5 @@
 module GitHub.Users.Followers where
+import GitHub.Internal
 
 followers = "/followers"
 following = "/following"

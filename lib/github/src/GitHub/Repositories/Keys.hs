@@ -1,4 +1,5 @@
 module GitHub.Repositories.Keys where
+import GitHub.Internal
 
 repoKeys o r = ownerRepo o r <> "/keys"
 repoKey o r i = repoKeys o r <> "/" <> i

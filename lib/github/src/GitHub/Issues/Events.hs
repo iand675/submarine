@@ -1,4 +1,5 @@
 module GitHub.Issues.Events where
+import GitHub.Internal
 
 --| GET /repos/:owner/:repo/issues/:issue_number/events
 listIssueEvents ::

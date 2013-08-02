@@ -1,4 +1,5 @@
 module GitHub.Issues.Labels where
+import GitHub.Internal
 
 --| GET /repos/:owner/:repo/labels
 listRepositoryLabels ::

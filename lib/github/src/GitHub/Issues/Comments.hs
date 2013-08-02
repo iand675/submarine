@@ -1,4 +1,5 @@
 module GitHub.Issues.Comments where
+import GitHub.Internal
 
 issuesComments o r = ownerRepo o r <> "/issues/comments"
 issuesComment o r i = issuesComments o r <> "/" <> i

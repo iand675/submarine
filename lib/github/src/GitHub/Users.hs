@@ -1,4 +1,5 @@
 module GitHub.Users where
+import GitHub.Internal
 
 currentUser = "/user"
 users = "/users"

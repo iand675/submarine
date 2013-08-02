@@ -1,131 +1,54 @@
-require 'active_support/inflector'
+module Colorize
+  def colorize(text, color_code)
+    "\033[#{color_code}m#{text}\033[0m"
+  end
 
-libs = {
-  amqp: { name: 'amqp', local_dependencies: [] },
-  elastic_search: { name: 'elastic-search', local_dependencies: [:easy_api, :uri_template] },
-  api: { name: 'easy-api', local_dependencies: [] },
-  digitalocean: { name: 'digitalocean', local_dependencies: [] },
-  github: { name: 'github', local_dependencies: [:easy_api, :uri_template] },
-  hypermedia: { name: 'hypermedia', local_dependencies: [] },
-  intercom: { name: 'intercom', local_dependencies: [:easy_api, :uri_template] },
-  mandrill: { name: 'mandrill', local_dependencies: [:easy_api, :uri_template] },
-  metrics: { name: 'metrics', local_dependencies: [] },
-  newrelic: { name: 'newrelic', local_dependencies: [] },
-  postgres_uuid: { name: 'postgres-simple-uuid', local_dependencies: [] },
-  stripe: { name: 'stripe', local_dependencies: [:easy_api, :uri_template] },
-  twilio: { name: 'twilio', local_dependencies: [:easy_api, :uri_template] },
-  uri: { name: 'uri-template', local_dependencies: [] },
-  redis_simple: { name: 'whodis', local_dependencies: [] }
-}
-
-task :default => (libs.keys.map {|k| "lib:#{k}:test" }) do
-
-end
-
-def cabal_tasks(lib_name, lib_info)
-  namespace lib_name do
-    dir = "lib/#{lib_info[:name]}"
-    human_lib_name = ActiveSupport::Inflector.humanize lib_name
-    tests_exist = false
-    benchmarks_exist = false
-
-    Dir.chdir(dir) do
-      tests_exist = Dir.exists? "test"
-      benchmarks_exist = Dir.exists? "bench"
-    end
-
-    desc "Configures the #{human_lib_name} library."
-    task :configure do |task, args|
-      Dir.chdir(dir) do
-        if Dir.exists? 'dist'
-          puts "#{human_lib_name} already configured. Nothing to be done."
-        else
-          sh 'cabal-dev configure --enable-tests --enable-benchmarks'
-        end
-      end
-    end
-
-    desc "Builds the #{human_lib_name} library."
-    task :build => [:configure] do
-      Dir.chdir(dir) do
-        sh 'cabal-dev install'
-      end
-    end
-
-    desc "Tests the #{human_lib_name} library."
-    task :test => [:build] do
-      Dir.chdir(dir) do
-        sh 'cabal-dev test'
-      end
+  {
+    :black    => 30,
+    :red      => 31,
+    :green    => 32,
+    :yellow   => 33,
+    :blue     => 34,
+    :magenta  => 35,
+    :cyan     => 36,
+    :white    => 37
+  }.each do |key, color_code|
+    define_method key do |text|
+      colorize(text, color_code)
     end
   end
 end
 
-namespace :server do
-  desc 'Configure cabal'
-  task :configure do
-    sh 'cabal-dev configure --enable-tests --enable-benchmarks'
+desc "Build all the things"
+task :all do |t|
+  include Colorize
+  def cabal_install(src)
+    puts(green "Building #{src}")
+    cabal = 'cabal-dev --sandbox=cabal-dev'
+    puts `#{cabal} install #{src} --force-reinstalls -v0`
+    if $?.to_i != 0
+      puts(red "Building #{src} failed")
+      exit $?.to_i
+    end
   end
 
-  desc 'Build the server executable'
-  task :build => [:configure] do
-    sh 'cabal-dev build'
-  end
+  libs = [
+    'amqp',
+    'whodis',
+    'postgres-simple-uuid',
+    'easy-api',
+    'uri-templater',
+    'digitalocean',
+    'stripe',
+    'mandrill',
+    'twilio',
+    'webby',
+    'metrics',
+    'github',
+    'elastic-search'
+  ]
 
-  desc 'Run server benchmarks'
-  task :bench => [:build] do
-    sh 'cabal-dev bench'
-  end
-
-  desc 'Run server tests'
-  task :test => [:build] do
-    sh 'cabal-dev test'
-  end
-end
-
-namespace :lib do
-  libs.each {|lib_name, lib_info| cabal_tasks lib_name, lib_info }
-end
-
-namespace :frontend do
-  task :build do
-  end
-
-  desc 'Bundle all assets for deployment'
-  task :bundle do
-  end
-
-  desc 'Run frontend tests'
-  task :test do
+  libs.each do |lib|
+    cabal_install "lib/#{lib}"
   end
 end
-
-namespace :ios do
-  desc 'Build'
-  task :build do
-  end
-
-  desc 'Test'
-  task :test do
-  end
-end
-
-namespace :mac do
-  task :build do
-
-  end
-end
-
-
-
-=begin
-namespace :db do
-  desc 'Migrate'
-  task :migrate do
-  end
-
-  desc 'Roll back'
-  task :rollback do
-  end
-end
-=end

@@ -1,11 +1,14 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
 module GitHub.Types where
+import Control.Applicative
 import Control.Monad.RWS.Strict
-import Data.ByteString.Char8 (ByteString, append)
+import Data.ByteString.Char8 (ByteString, append, pack)
+import Data.Text (Text)
 import Network.HTTP.Conduit
 
-data APILocation = GitHub | Enterprise ByteString
+data APILocation = GitHub | Enterprise String
 
-githubConfig :: APILocation -> Maybe ByteString -> Maybe (Request m)
+githubConfig :: APILocation -> Maybe String -> Maybe (Request m)
 githubConfig loc mk = do
   req <- parseUrl endpoint
   return $ addTokenHeader req
@@ -15,8 +18,9 @@ githubConfig loc mk = do
       Enterprise url -> url
     addTokenHeader = case mk of
       Nothing -> id
-      Just k -> \req ->
-        req { requestHeaders = ("Authorization", append "token " mk) : requestHeaders req }
+      Just k -> \req -> req
+        { requestHeaders = ("Authorization", append "token " (pack k)) : requestHeaders req
+        }
 
 data RateLimit = RateLimit
   { rateLimitLimit :: !Int
@@ -28,14 +32,13 @@ data GitHubConfig m = GitHubConfig
   , baseRequest :: Request m
   }
 
-newtype GitHub a = GitHub { runGitHub :: RWST (GitHubConfig IO) () RateLimit IO a }
-  deriving (Eq, Show, Monad, MonadIO)
-
+newtype GitHub a = GitHubM { runGitHub :: RWST (GitHubConfig IO) () RateLimit IO a }
+  deriving (Functor, Applicative, Monad, MonadIO)
 
 data PublicKey = PublicKey
   { publicKeyId :: Int
   , publicKeyKey :: Text
-
+  }
 
 data CurrentUserKey = CurrentUserKey
   { currentUserKeyId :: Int
@@ -54,4 +57,9 @@ data UserKeyPatch = UserKeyPatch
   , keyPatchKey :: Text
   }
 
-data RepositoryKey = 
+data EventsData
+data OwnerName
+data RepoName
+data OrgName
+data UserName
+

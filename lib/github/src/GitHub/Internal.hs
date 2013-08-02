@@ -1,12 +1,18 @@
-module GitHub.Internal where
+module GitHub.Internal (
+  get,
+  put,
+  post,
+  patch,
+  delete,
+  uri,
+  module GitHub.Types
+) where
+import GitHub.Types
 import Network.HTTP.Conduit
+import URI.TH
 
-get :: FromJSON a => Params -> Path -> GitHub a
-put :: (ToJSON a, FromJSON b) => Params -> Path -> a -> GitHub b
-
-post :: 
-post'
-patch
-patch'
-delete
-delete'
+get = undefined
+put = undefined
+post = undefined
+patch = undefined
+delete = undefined

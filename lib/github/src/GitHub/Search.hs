@@ -1,4 +1,5 @@
 module GitHub.Search where
+import GitHub.Internal
 
 --| GET /legacy/issues/search/:owner/:repository/:state/:keyword
 searchIssues ::

@@ -1,4 +1,5 @@
 module GitHub.PullRequests.ReviewComments where
+import GitHub.Internal
 
 --| GET /repos/:owner/:repo/pulls/:number/comments
 listPullRequestComments ::

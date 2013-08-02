@@ -1,4 +1,5 @@
 module GitHub.Git.Tags where
+import GitHub.Internal
 
 tags o r = ownerRepo o r <> "/git/tags"
 tag o r s = tags o r <> "/" <> s

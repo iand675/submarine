@@ -1,4 +1,5 @@
 module GitHub.Issues where
+import GitHub.Internal
 
 issues = "/issues"
 currentUserIssues = currentUser <> issues

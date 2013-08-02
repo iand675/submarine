@@ -1,4 +1,5 @@
 module GitHub.Users.Emails where
+import GitHub.Internal
 
 emails = currentUser <> "/emails"
 

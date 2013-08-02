@@ -1,4 +1,5 @@
 module GitHub.Repositories.Forks where
+import GitHub.Internal
 
 forks o r = ownerRepo o r <> "/forks"
 

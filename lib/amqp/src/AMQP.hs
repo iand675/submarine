@@ -12,7 +12,7 @@ import qualified Network.AMQP as A
 class FromMessage a where
   fromMessage :: A.Message -> Maybe a
 
-runAMQP :: Channel -> AMQP a -> IO a
+runAMQP :: A.Channel -> AMQP a -> IO a
 runAMQP chan action = runReaderT (fromAMQP action) chan
 
 transactionally :: AMQP (Either e a) -> AMQP (Either e a)

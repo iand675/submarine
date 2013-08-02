@@ -1,4 +1,5 @@
 module GitHub.Activity.Starring where
+import GitHub.Internal
 
 data Direction = Ascending | Descending
 data StarredRepositoriesSortBy = Created | Updated

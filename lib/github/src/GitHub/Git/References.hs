@@ -1,4 +1,5 @@
 module GitHub.Git.References where
+import GitHub.Internal
 
 refs o r = ownerRepo o r <> "/git/refs"
 ref o r r' = refs o r <> "/" <> r'

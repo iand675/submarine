@@ -1,4 +1,5 @@
 module GitHub.Git.Trees where
+import GitHub.Internal
 
 trees o r = ownerRepo o r <> "/git/trees"
 tree o r s = trees o r <> "/" <> s

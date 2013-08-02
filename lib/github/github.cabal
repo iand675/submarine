@@ -56,7 +56,7 @@ library
                        GitHub.Users.Emails,
                        GitHub.Users.Followers,
                        GitHub.Users.Keys
-  build-depends:       base ==4.6.*, lens, mtl, aeson, easy-api, uri-template
+  build-depends:       base ==4.6.*, lens, mtl, aeson, easy-api, uri-templater, http-conduit, bytestring, text
   hs-source-dirs:      src
 
 

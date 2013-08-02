@@ -1,4 +1,5 @@
 module GitHub.Gists where
+import GitHub.Internal
 
 gists = "/gists"
 public = gists <> "/public"

@@ -1,4 +1,5 @@
 module GitHub.Repositories where
+import GitHub.Internal
 
 --| GET /user/repos
 listCurrentUserRepositories ::

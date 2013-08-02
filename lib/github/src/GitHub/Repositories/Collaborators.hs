@@ -1,4 +1,5 @@
 module GitHub.Repositories.Collaborators where
+import GitHub.Internal
 
 collaborators o r = ownedRepo o r <> "/collaborators"
 collaborator o r u = collaborators o r <> "/" <> u

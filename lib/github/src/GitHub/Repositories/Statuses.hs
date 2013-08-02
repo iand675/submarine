@@ -1,4 +1,5 @@
 module GitHub.Repositories.Statuses where
+import GitHub.Internal
 
 statuses o r s = ownerRepo o r <> "/statuses/" <> s
 

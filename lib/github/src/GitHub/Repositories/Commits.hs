@@ -1,4 +1,5 @@
 module GitHub.Repositories.Commits where
+import GitHub.Internal
 
 --| GET /repos/:owner/:repo/commits
 listRepositoryCommits ::

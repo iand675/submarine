@@ -6,7 +6,7 @@ session:
       layout: even-vertical
       panes:
         - cmd: "guard"
-        - cmd: ["pwd", "ls -la"]
+        - cmd: ["alias cabal=\"cabal-dev --sandbox=~/Code/submarine.cabal\""]
           focus: true
     - name: "lib"
       layout: even-vertical

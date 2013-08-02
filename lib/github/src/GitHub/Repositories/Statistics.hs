@@ -1,4 +1,5 @@
 module GitHub.Repositories.Statistics where
+import GitHub.Internal
 
 stats o r e = ownerRepo o r <> "/stats/" <> e
 
