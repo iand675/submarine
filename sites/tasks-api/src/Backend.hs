@@ -27,6 +27,21 @@ type TaskPatch = Task Maybe
 
 newtype Id a = Id String
 
+-- backends should have invariants established but keep clever stuff under the hood?
+-- leaning towards yes...
+
+{-
+	forall TaskBackend:
+		set task fields on new task match corresponding fields on full task
+		getting task with returned id returns correct full task
+	for task backend with caching
+	  createTask caches created full task
+	for task backend with event publishing	
+	  createTask emits task created event
+
+	  updateTask emits task updated event
+	  deleteTask emits task deleted event
+-}
 data TaskBackend m = TaskBackend
 	{ createTask :: NewTask -> m (Id Task, FullTask)
 	, getTask    :: Id Task -> m (Maybe FullTask)
