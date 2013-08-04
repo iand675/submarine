@@ -5,22 +5,22 @@ import Data.Aeson.TH
 import Network.URI.Template
 
 chargesUrl = [uri| /v1/charges |]
-chargeUrl = [uri| /v1/charges/{chargeId} |]
+chargeUrl chargeId = [uri| /v1/charges/{chargeId} |]
 couponsUrl = [uri| /v1/coupons |]
-couponUrl = [uri| /v1/coupons/{couponId} |]
+couponUrl couponId = [uri| /v1/coupons/{couponId} |]
 customersUrl = [uri| /v1/customers |]
-customerUrl = [uri| /v1/customers/{customerId} |]
-customerSubscriptionUrl = [uri| /v1/customers/{customerId}/subscription |]
+customerUrl customerId = [uri| /v1/customers/{customerId} |]
+customerSubscriptionUrl customerId = [uri| /v1/customers/{customerId}/subscription |]
 invoicesUrl = [uri| /v1/invoices |]
-invoiceUrl = [uri| /v1/invoices/{invoiceId} |]
+invoiceUrl invoiceId = [uri| /v1/invoices/{invoiceId} |]
 invoiceItemsUrl = [uri| /v1/invoicesitems |]
-invoiceItemUrl = [uri| /v1/invoicesitems/{invoiceItemId} |]
+invoiceItemUrl invoiceItemId = [uri| /v1/invoicesitems/{invoiceItemId} |]
 plansUrl = [uri| /v1/plans |]
-planUrl = [uri| /v1/plans/{planId} |]
+planUrl planId = [uri| /v1/plans/{planId} |]
 eventsUrl = [uri| /v1/events |]
-eventUrl = [uri| /v1/events/{eventId} |]
+eventUrl eventId = [uri| /v1/events/{eventId} |]
 tokensUrl = [uri| /v1/tokens |]
-tokenUrl = [uri| /v1/tokens/{tokenId} |]
+tokenUrl tokenId = [uri| /v1/tokens/{tokenId} |]
 
 data NewBankAccountToken = NewBankAccountToken
 	{ _newbankaccountCountry :: Text
@@ -90,46 +90,46 @@ newtype Stripe = Stripe { fromStripe :: ReaderT StripeConfig (ResourceT IO) a } 
 
 -- create charge
 -- POST /v1/charges (NewCharge -> Charge)
-createCharge :: NewCharge -> Stripe (Request Charge)
+createCharge :: NewCharge -> Stripe (Response Charge)
 createCharge = post chargesUrl
 
 -- get charge
 -- GET /v1/charges/{CHARGE_ID}
-getCharge :: ChargeId -> Stripe (Request Charge)
+getCharge :: ChargeId -> Stripe (Response Charge)
 getCharge = get . chargeUrl
 
 -- refund charge
 -- POST /v1/charges/{CHARGE_ID}/refund (Refund -> Charge)
-refundCharge :: ChargeId -> Refund -> Stripe (Request Charge)
+refundCharge :: ChargeId -> Refund -> Stripe (Response Charge)
 refundCharge = post . (++ "/refund") . chargeUrl
 
 -- capture charge
 -- POST /v1/charges/{CHARGE_ID}/capture
-captureCharge :: ChargeId -> Capture -> Stripe (Request Charge)
+captureCharge :: ChargeId -> Capture -> Stripe (Response Charge)
 captureCharge = post . (++ "/capture") . chargeUrl
 
 -- list all charges
-listCharges :: ListChargesQuery -> Stripe (Request Charges)
-listCharges q = get (chargesUrl ++ [url| {?q*} |])
+listCharges :: ListChargesQuery -> Stripe (Response Charges)
+listCharges q = get (chargesUrl ++ [uri| {?q*} |])
 
 -- create customer
-createCustomer :: NewCustomer -> Stripe (Request Customer)
+createCustomer :: NewCustomer -> Stripe (Response Customer)
 createCustomer = post customersUrl
 
 -- get customer
-getCustomer :: CustomerId -> Stripe (Request Customer)
+getCustomer :: CustomerId -> Stripe (Response Customer)
 getCustomer = get . customerUrl
 
 -- update customer
-updateCustomer :: CustomerId -> UpdatedCustomer -> Stripe (Request Customer)
+updateCustomer :: CustomerId -> UpdatedCustomer -> Stripe (Response Customer)
 updateCustomer cId = post (customerUrl cId)
 
 -- delete customer
-deleteCustomer :: CustomerId -> Stripe (Request DeletedResponse)
+deleteCustomer :: CustomerId -> Stripe (Response DeletedResponse)
 deleteCustomer = delete . customerUrl
 
 -- list all customers
-listCustomers :: ListCustomersQuery -> Stripe Customers
+listCustomers :: ListCustomersQuery -> Stripe (Response Customers)
 listCustomers q = get (customersUrl ++ [url| {?q*} |])
 
 -- update subscription
