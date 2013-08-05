@@ -83,17 +83,20 @@ inMemoryBackend = do
   undefined -- some simple implementation
 	return $ TaskBackend
 		{ createTask = undefined
-		, readTask   = undefined
+		, getTask    = undefined
 		, updateTask = undefined
 		, deleteTask = undefined
 		, listTasks  = undefined
 		}
 
-createTaskImp :: NewTask -> m (Id Task, FullTask)
+createTaskImpl :: NewTask -> m (Id Task, FullTask)
 createTaskImpl nt = do
   newTask <- initializeDefaults nt
   newTaskId <- postgres $ do
     insert into Tasks newTask
 
+getTaskImpl :: Id Task -> m (Maybe FullTask)
+getTaskImpl taskId = do
+  <- select from tasks task where id = taskId
 
 
