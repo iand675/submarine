@@ -1,5 +1,9 @@
 module Data.Tasks where
+import AMQP
+import Database.PostgreSQL.Simple
+import Database.Redis.Simple
 import Data.Types
+
 {-
 	forall TaskBackend:
 		set task fields on new task match corresponding fields on full task
@@ -16,13 +20,10 @@ data TaskBackend m = TaskBackend
 	{ createTask :: NewTask -> m (Id Task, FullTask)
 	, getTask    :: Id Task -> m (Maybe FullTask)
 	, updateTask :: Id Task -> TaskPatch -> m (Maybe FullTask)
-	, deleteTask :: Id Task -> m (Maybe FullTask)
 	, listTasks  :: TaskQuery -> m [(Id Task, FullTask)]
 	}
 
-data TaskQuery
-	= All
-	| Where [QueryPredicate]
+data TaskQuery = Where [QueryPredicate]
 
 data QueryPredicate
 	= AssignedTo (Id User)
@@ -31,27 +32,25 @@ data QueryPredicate
 	| ProjectIs  (Id Project)
 	| HasTags    [String]
 
-publishTaskEvents :: TaskBackend m -> TaskBackend m'
+taskBackend :: (RabbitBacked m, RedisBacked m, PostgresBacked m) => TaskBackend m
+taskBackend = publishTaskEvents $ cacheTasks $ postgresBackend
+
+publishTaskEvents :: RabbitBacked m => TaskBackend m -> TaskBackend m
 publishTaskEvents b = b
   { createTask = \t -> (createTask b) t >>= \p@(taskId, task) -> do
-      lift $ publish taskExchange (taskCreated taskId task)
+      amqp $ publish taskExchange (taskCreated taskId task)
       return p
     updateTask = \t p -> (updateTask b) t p >>= \mUpdatedTask -> do
       case mUpdatedTask of
         Nothing -> return ()
-        Just updatedTask -> lift $ publish taskExchange (taskUpdated taskId updatedTask)
+        Just updatedTask -> amqp $ publish taskExchange (taskUpdated taskId updatedTask)
       return mUpdatedTask
-    deleteTask = \t -> (deleteTask b) t >>= \mDeletedTask -> do
-      case mDeletedTask of
-        Nothing -> return ()
-        Just deletedTask -> lift $ publish taskExchange (taskDeleted taskId deletedTask)
-      return mDeletedTask
   }
 
-cacheTasks :: TaskBackend m -> TaskBackend m'
+cacheTasks :: RedisBacked m => TaskBackend m -> TaskBackend m
 cacheTasks b = b
   { createTask = \t -> (createTask b) t >>= \p@(taskId, task) -> do
-      setCached taskId task
+      redis $ setCached taskId task
       return p
   , getTask = \taskId -> do
       mtask <- getCached
@@ -65,29 +64,31 @@ cacheTasks b = b
       updatedTask <- (updateTask b) t p
       maybe (return ()) (setCached t) updatedTask
       return updatedTask
-  , deleteTask = \t -> do
-      mdeletedTask <- (deleteTask b) t
-      maybe (return ()) (\_ -> removeCached t) mdeletedTask
-      return mdeletedTask
   }
   where
-    getCached taskId = do
-      mTask <- lift $ get (taskNamespace taskId)
+    getCached taskId = redis $ do
+      mTask <- get (taskNamespace taskId)
       lift $ expire (taskNamespace taskId) 86400
       return $ maybe Nothing decode mTask
-    setCached taskId task = lift $ setEx (taskNamespace taskId) 86400 (encode task)
-    removeCached taskId = lift $ del [taskNamespace taskId]
+    setCached taskId task = redis $ setEx (taskNamespace taskId) 86400 (encode task)
 
-inMemoryBackend :: IO (TaskBackend IO)
+inMemoryBackend :: TaskBackend (State (Int, HashMap String FullTask))
 inMemoryBackend = do
   undefined -- some simple implementation
 	return $ TaskBackend
 		{ createTask = undefined
 		, getTask    = undefined
 		, updateTask = undefined
-		, deleteTask = undefined
 		, listTasks  = undefined
 		}
+
+postgresBackend :: PostgresBacked m => TaskBackend m
+postgresBackend = TaskBackend
+  { createTask = createTaskImpl,
+	, getTask = getTaskImpl,
+	, updateTask = updateTaskImpl,
+	, listTasks = listTasksImpl
+	}
 
 createTaskImpl :: NewTask -> m (Id Task, FullTask)
 createTaskImpl nt = do
@@ -96,7 +97,25 @@ createTaskImpl nt = do
     insert into Tasks newTask
 
 getTaskImpl :: Id Task -> m (Maybe FullTask)
-getTaskImpl taskId = do
-  <- select from tasks task where id = taskId
+getTaskImpl taskId = single <$> [pgsql| select {Task} from tasks where id = @taskId limit 1 |]
 
+updateTaskImpl :: Id Task -> TaskPatch -> m (Maybe FullTask)
+updateTaskImpl taskId patch = single <$> [pgsql|
+		update tasks set {Task} = _ where id = taskId;
+		insert into TaskUpdates {Task} values @taskPatch;
+		select {Task} from tasks where id = taskId limit 1;
+	|]
+
+listTasksImpl :: TaskQuery -> m [(Id Task, FullTask)]
+listTasksImpl q = [pgsql| select {Task} from tasks where {{criterion}} |]
+  where
+		criterion = formatQueryPredicate q
+		formatQueryPredicate (AssignedTo (Id userId)) = case p of
+			(AssignedTo (Id userId)) -> "assigned_to = {userId}"
+			(CreatedBy (Id userId)) -> "created_by = {userId}"
+			(ListIs (Id listId)) -> "list_id = {listId}"
+			-- TODO: this should induce a join from task -> listId -> list -> projectId -> project
+			(ProjectIs (Id projectId)) -> "project_id = {listId}"
+			-- TODO: this should induce a join on a tags table (postgres arrays would be inappropriate)
+			(HasTags ts) -> "tags"
 
