@@ -1,0 +1,22 @@
+body {
+  padding-top: 70px;
+}
+
+h3 .glyphicon {
+  font-size: 65%;
+  vertical-align: baseline;
+  line-height: 2.15;
+}
+
+.drag-point {
+  display: inline-block;
+}
+
+.task .checkbox {
+  display: inline-block;
+}
+/*.container {*/
+  /*margin: 0;*/
+/*}*/
+
+
