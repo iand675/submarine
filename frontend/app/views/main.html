@@ -24,21 +24,32 @@
     <div class="container">
       <div class="row">
         <div class="col-lg-8">
-          <h3>Inbox</h3>
+          <h3>{{activeList.name}}</h3>
         </div>
         <div class="col-lg-4">
           <input class="form-control" type="search" placeholder="Filter" value="" ng-model="taskFilter">
         </div>
       </div>
-      <div class="row" data-ng-repeat="task in activeList.tasks | filter:taskFilter">
+      <div class="row" data-ng-repeat="(taskId, task) in activeList.tasks | filter:taskFilter">
         <div class="col-lg-12">
           <div class="task" >
             <div class="checkbox">
               <label>
-                <input type="checkbox">
-                {{task}}
+                <input type="checkbox" data-ng-checked="task.complete" ng-click="toggleTaskCompletion(taskId)">
+                {{task.name}}
               </label>
             </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-6">
+          <form ng-submit="addTask()">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Task Description" ng-model="newTaskName">
+            <span class="input-group-btn">
+              <button class="btn btn-default" type="submit">Add Task</button>
+            </span>
           </div>
         </div>
       </div>
