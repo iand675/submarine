@@ -1,200 +1,227 @@
 module Stripe where
-import Control.Lens
 import Data.Aeson
 import Data.Aeson.TH
-import Network.URI.Template
+import URI.TH
+import Stripe.Types
 
-chargesUrl = [uri| /v1/charges |]
-chargeUrl chargeId = [uri| /v1/charges/{chargeId} |]
-couponsUrl = [uri| /v1/coupons |]
-couponUrl couponId = [uri| /v1/coupons/{couponId} |]
-customersUrl = [uri| /v1/customers |]
-customerUrl customerId = [uri| /v1/customers/{customerId} |]
-customerSubscriptionUrl customerId = [uri| /v1/customers/{customerId}/subscription |]
-invoicesUrl = [uri| /v1/invoices |]
-invoiceUrl invoiceId = [uri| /v1/invoices/{invoiceId} |]
-invoiceItemsUrl = [uri| /v1/invoicesitems |]
-invoiceItemUrl invoiceItemId = [uri| /v1/invoicesitems/{invoiceItemId} |]
-plansUrl = [uri| /v1/plans |]
-planUrl planId = [uri| /v1/plans/{planId} |]
-eventsUrl = [uri| /v1/events |]
-eventUrl eventId = [uri| /v1/events/{eventId} |]
-tokensUrl = [uri| /v1/tokens |]
-tokenUrl tokenId = [uri| /v1/tokens/{tokenId} |]
+-- Stripe API version 2013-07-05
 
-data NewBankAccountToken = NewBankAccountToken
-	{ _newbankaccountCountry :: Text
-	, _newbankaccountRoutingNumber :: Text
-	, _newbankaccountAccountNumber :: Text
-	}
-
-data NewCharge = NewCharge
-	{ _newchargeAmount :: Cents
-	, _newchargeCurrency :: Text
-	, _newchargeIdentifier :: Either CustomerId CreditCard
-	, _newchargeDescription :: Maybe Text
-	, _newchargeCapture :: Maybe Bool
-	, _newchargeApplicationFee :: Maybe Cents
-	}
-
-data NewCardTokenCardInfo = NewCardTokenCardInfo
-	{ _newcardtokenNumber :: Text
-	, _newcardtokenExpirationMonth :: Int
-	, _newcardtokenExpirationYear :: Int
-	, _newcardtokenCvc :: Text
-	, _newcardtokenName :: Maybe Text
-	}
-
-data NewCardToken
-	= CardTokenCardInfo NewCardCardInfo
-	| CardTokenCustomer NewCardTokenCustomerInfo
-
-data Capture = Capture
-	{ _captureChargeId :: Text
-	, _captureAmount :: Maybe Cents
-	, _captureApplicationFee :: Maybe Bool
-	}
-
-data Charge = Charge
-	{ _chargeIdentifier :: Text
-	, _chargeObject :: Text
-	, _chargeCreated :: Integer
-	, _chargeLivemode :: Bool
-	, _chargePaid :: Bool
-	, _chargeAmount :: Cents
-	, _chargeCurrency :: Text
-	, _chargeRefunded :: Bool
-	, _chargeFee :: Maybe Cents
-	, _chargeFeeDetails :: Maybe FeeDetails
-	, _chargeCard :: CreditCard
-	, _chargeCaptured :: Bool
-	, _chargeFailureMessage :: Maybe Text
-	, _chargeFailureCode :: Maybe Text
-	, _chargeAmountRefunded :: Cents
-	, _chargeCustomer :: Maybe CustomerId
-	, _chargeInvoice :: Maybe invoice
-	, _chargeDescription :: Maybe Text
-	, _chargeDispute :: Maybe Dispute
-	}
-
-data Refund = Refund
-	{ _refundChargeId :: Text
-	, _refundAmount :: Maybe Cents
-	, _refundApplicationFee :: Maybe Bool
-	}
-
-newtype Stripe = Stripe { fromStripe :: ReaderT StripeConfig (ResourceT IO) a } deriving (Functor, Applicative, Monad)
-
--- Stripe API version 2013-02-13
-
+-- Charges
 
 -- create charge
--- POST /v1/charges (NewCharge -> Charge)
-createCharge :: NewCharge -> Stripe (Response Charge)
-createCharge = post chargesUrl
+createCharge :: NewCharge -> StripeResponse Charge
+createCharge = post [uri| /charges{?q*} |]
 
 -- get charge
--- GET /v1/charges/{CHARGE_ID}
-getCharge :: ChargeId -> Stripe (Response Charge)
-getCharge = get . chargeUrl
+retrieveCharge :: ChargeId -> StripeResponse Charge
+retrieveCharge = get [uri| /charges/{chargeId} |]
 
 -- refund charge
--- POST /v1/charges/{CHARGE_ID}/refund (Refund -> Charge)
-refundCharge :: ChargeId -> Refund -> Stripe (Response Charge)
-refundCharge = post . (++ "/refund") . chargeUrl
+refundCharge :: ChargeId -> Refund -> StripeResponse Charge
+refundCharge = post [uri| /charges/{chargeId}/refund |]
 
 -- capture charge
--- POST /v1/charges/{CHARGE_ID}/capture
-captureCharge :: ChargeId -> Capture -> Stripe (Response Charge)
-captureCharge = post . (++ "/capture") . chargeUrl
+captureCharge :: ChargeId -> Capture -> StripeResponse Charge
+captureCharge chargeId = post [uri| /charges/{chargeId}/capture |]
 
 -- list all charges
-listCharges :: ListChargesQuery -> Stripe (Response Charges)
-listCharges q = get (chargesUrl ++ [uri| {?q*} |])
+listCharges :: ListChargesQuery -> StripeResponse (List Charge)
+listCharges q = get [uri| /charges{?q*} |]
+
+-- Customers
 
 -- create customer
-createCustomer :: NewCustomer -> Stripe (Response Customer)
-createCustomer = post customersUrl
+createCustomer :: NewCustomer -> StripeResponse Customer
+createCustomer = post [uri| /customers |]
 
 -- get customer
-getCustomer :: CustomerId -> Stripe (Response Customer)
-getCustomer = get . customerUrl
+retrieveCustomer :: CustomerId -> StripeResponse Customer
+retrieveCustomer customerId = get [uri| /customers/{customerId} |]
 
 -- update customer
-updateCustomer :: CustomerId -> UpdatedCustomer -> Stripe (Response Customer)
-updateCustomer cId = post (customerUrl cId)
+updateCustomer :: CustomerId -> UpdatedCustomer -> StripeResponse Customer
+updateCustomer customerId = post [uri| /customers/{customerId} |]
 
 -- delete customer
-deleteCustomer :: CustomerId -> Stripe (Response DeletedResponse)
-deleteCustomer = delete . customerUrl
+deleteCustomer :: CustomerId -> StripeResponse DeletedResponse
+deleteCustomer customerId = delete [uri| /customers/{customerId} |]
 
 -- list all customers
-listCustomers :: ListCustomersQuery -> Stripe (Response Customers)
-listCustomers q = get (customersUrl ++ [url| {?q*} |])
+listCustomers :: ListCustomersQuery -> StripeResponse Customers
+listCustomers q = get [uri| /customers{?q} |]
 
--- update subscription
-updateCustomerSubscription :: CustomerId -> UpdatedSubscription -> Stripe 
-updateCustomerSubscription 
+-- Cards
 
--- cancel subscription
-cancelSubscription :: CustomerId -> Stripe DeletedResponse
-cancelSubscription = delete . customerId
+-- create a new card
+createCard :: CustomerId -> NewCard -> StripeResponse Card
+createCard customerId = post [uri| /customers/{customerId}/cards |]
 
--- create plan
--- get plan
--- update plan
--- delete plan
--- list all plans
+-- retrieve an existing card
+retrieveExistingCard :: CustomerId -> CardId -> StripeResponse Card
+retrieveExistingCard customerId cardId = get [uri| /customers/{customerId}/cards/{cardId} |]
 
--- create coupon
--- get coupon
--- delete coupon
--- list coupons
+-- update a card
+updateCard :: CustomerId -> CardId -> UpdatedCard -> StripeResponse Card
+updateCard customerId cardId = post [uri| /customers/{customerId}/cards/{cardId} |]
 
--- delete discount
+-- delete a card
+deleteCard :: CustomerId -> CardId -> StripeResponse Card
+deleteCard customerId cardId = delete [uri| /customers/{customerId}/cards/{cardId} |]
 
--- get invoice
--- get invoice line items
--- create invoice
--- pay invoice
--- update invoice
--- list invoices
-listInvoices :: ListInvoicesQuery -> Stripe Invoices
-listInvoices q = get (invoicesUrl ++ [url| {?q*} |])
--- get upcoming invoice
+-- list all cards
+listCards :: CustomerId -> Count -> Offset -> StripeResponse (List Card)
+listCards customerId count offset = get [uri| /customers/{customerId}/cards{?count, offset} |]
 
--- create invoice item
-createInvoiceItem
--- get invoice item
--- update invoice item
--- delete invoice item
--- list all invoice items
+-- Subscriptions
 
--- update dispute
+updateSubscription :: CustomerId -> UpdatedSubscription -> StripeResponse Subscription
+updateSubscription customerId = post [uri| /customers/{customerId}/subscription |]
 
--- create transfer
--- get transfer
--- cancel transfer
--- list all transfers
+data CancelTime = AtPeriodEnd | Now
+cancelSubscription :: CustomerId -> CancelTime -> StripeResponse Subscription
+cancelSubscription customerId = delete [uri| /customers/{customerId}/subscription |]
 
--- create recipient
--- get recipient
--- update recipient
--- delete recipient
--- list recipients
+-- Plans
 
--- get account details
+createPlan :: NewPlan -> StripeResponse Plan
+createPlan = post [uri| /plans |]
 
--- get balance
--- list balance history
+retrievePlan :: PlanId -> StripeResponse Plan
+retrievePlan planId = get [uri| /plans/{planId} |]
 
--- get event
--- list all events
--- EVENT WEBHOOKS
+updatePlan :: PlanId -> UpdatedPlan -> StripeResponse Plan
+updatePlan planId = post [uri| /plans/{planId} |]
 
--- create card token
+deletePlan :: PlanId -> StripeResponse DeletedPlan
+deletePlan planId = delete [uri| /plans/{planId} |]
 
--- create bank account token
+listPlans :: Count -> Offset -> StripeResponse (List Plan)
+listPlans count offset = get [uri| /plans{?count,offset} |]
+
+-- Coupons
+
+createCoupon :: NewCoupon -> StripeResponse Coupon
+createCoupon = post [uri| /coupons |]
+
+retrieveCoupon :: CouponId -> StripeResponse Coupon
+retrieveCoupon couponId = get [uri| /coupons/{couponId} |]
+
+deleteCoupon :: CouponId -> StripeResponse DeletedCoupon
+deleteCoupon couponId = delete [uri| /coupons/{couponId} |]
+
+listCoupons :: Count -> Offset -> StripeResponse (List Coupon)
+listCoupons = get [uri| /coupons{?count,offset} |]
+
+-- Discounts
+
+deleteDiscount :: CustomerId -> StripeResponse DeletedDiscount
+deleteDiscount customerId = delete [uri| /customers/{customerId}/discount |]
+
+-- Invoices
+
+retrieveInvoice :: InvoiceId -> StripeResponse Invoice
+retrieveInvoice invoiceId = get [uri| /invoices/{invoiceId} |]
+
+retrieveLineItems :: InvoiceId -> Count -> Offset -> CustomerId -> Stripe (List LineItem)
+retrieveLineItems invoiceId count offset customerId = get [uri| /invoices/{invoiceId}/lines{?count,offset,customerId} |]
+
+-- TODO: need to make json object for customer id here
+createInvoice :: CustomerId -> StripeResponse Invoice
+createInvoice = post [uri| /invoices |]
+
+payInvoice :: InvoiceId -> StripeResponse Invoice
+payInvoice invoiceId = post [uri| /invoices/{invoiceId}/pay |]
+
+updateInvoice :: InvoiceId -> UpdatedInvoice -> StripeResponse Invoice
+updateInvoice invoiceId = post [uri| /invoices/{invoiceId} |]
+
+listInvoices :: Count -> Offset -> CustomerId -> Date -> StripeResponse (List Invoice)
+listInvoices count offset customer date = get [uri| /invoices{?count,offset,customer,date} |]
+
+getUpcomingInvoice :: CustomerId -> StripeResponse Invoice
+getUpcomingInvoice customer = get [uri| /invoices/upcoming{?customer} |]
+
+-- Invoice items
+
+createInvoiceItem :: NewInvoiceItem -> StripeResponse InvoiceItem
+createInvoiceItem = post [uri| /invoiceitems |]
+
+retrieveInvoiceItem :: InvoiceItemId -> StripeResponse InvoiceItem
+retrieveInvoiceItem invoiceItemId = get [uri| /invoiceitems/{invoiceItemId} |]
+
+updateInvoiceItem :: InvoiceItemId -> UpdatedInvoice -> StripeResponse InvoiceItem
+updateInvoiceItem invoiceItemId = post [uri| /invoiceitems/{invoiceItemId} |]
+
+deleteInvoiceItem :: InvoiceItemId -> StripeResponse DeletedInvoiceItem
+deleteInvoiceItem invoiceItemId = post [uri| /invoiceitems/{invoiceItemId} |]
+
+listInvoiceItems :: Count -> Offset -> CustomerId -> Date -> StripeResponse (List InvoiceItem)
+listInvoiceItems count offset customer date = get [uri| /invoices{?count,offset,customer,date} |]
+
+-- Disputes
+
+updateDispute :: ChargeId -> Evidence -> StripeResponse Dispute
+updateDispute chargeId evidence = post [uri| /charges/{chargeId}/dispute |]
+
+-- Transfers
+
+createTransfer :: NewTransfer -> StripeResponse Transfer
+createTransfer = post [uri| /transfers |]
+
+retrieveTransfer :: TransferId -> StripeResponse Transfer
+retrieveTransfer transferId = get [uri| /transfers/{transferId} |]
+
+cancelTransfer :: TransferId -> StripeResponse Transfer
+cancelTransfer transferId = get [uri| /transfers/{transferId}/cancel |]
+
+listTransfers :: Count -> Offset -> Date -> RecipientId -> TransferStatus -> StripeResponse (List Transfer)
+listTransfers count offset date recipient status = get [uri| /transfers{?count,offset,date,recipient,status} |]
+
+-- Recipients
+
+createRecipient :: NewRecipient -> StripeResponse Recipient
+createRecipient = post [uri| /recipients |]
+
+retrieveRecipient :: RecipientId -> StripeResponse Recipient
+retrieveRecipient recipientId = get [uri| /recipients/{recipientId} |]
+
+updateRecipient :: RecipientId -> UpdatedRecipient -> StripeResponse Recipient
+updateRecipient recipientId = post [uri| /recipients/{recipientId} |]
+
+deleteRecipient :: RecipientId -> StripeResponse DeletedRecipient
+deleteRecipient recipientId = delete [uri| /recipients/{recipientId} |]
+
+listRecipients :: Count -> Offset -> VerificationStatus -> StripeResponse (List Recipient)
+listRecipients count offset verified = get [uri| /recipients{?count, offset, verified} |]
+
+-- Account
+
+retrieveAccount :: StripeResponse Account
+retrieveAccount = get [uri| /account |]
+
+-- Balance
+
+retrieveBalance :: StripeResponse Balance
+retrieveBalance = get [uri| /balance |]
+
+listBalanceHistory :: Count -> Offset -> AvailableOn -> Created -> TransferId -> TransactionType -> StripeResponse (List Transaction)
+listBalanceHistory count offset available_on created transfer type = get [uri| /balance/history{?count,offset,available_on,created,transfer,type}|]
+
+-- Events
+
+retrieveEvent :: EventId -> StripeResponse Event
+retrieveEvent eventId = get [uri| /events/{eventId} |]
+
+listEvents :: Count -> Offset -> Created -> EventType -> StripeResponse (List Event)
+listEvents count offset created type = get [uri| /events{?count,offset,created,type} |]
+
+-- Tokens
+
+-- This encapsulates both card & bank account tokens
+createToken :: NewToken -> StripeResponse Token
+createToken = post [uri| /tokens |]
+
+retrieveToken :: TokenId -> StripeResponse Token
+retrieveToken tokenId = get [uri| /tokens/{tokenId} |]
 
 
--- get token
