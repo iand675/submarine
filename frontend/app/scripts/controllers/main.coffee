@@ -6,15 +6,21 @@ angular.module('frontendApp')
     $scope.taskFilter = ''
     $scope.activeList = {
       name: 'Inbox',
-      tasks: {}
+      tasks: []
     }
     $scope.toggleTaskCompletion = (taskId) ->
-      $scope.activeList.tasks[taskId].complete = !$scope.activeList.tasks[taskId].complete
+      selectedTask = _($scope.activeList.tasks).find (t) ->
+        t.id == taskId
+
+      if selectedTask
+        selectedTask.complete = !selectedTask.complete
 
     $scope.newTaskName = ''
     $scope.addTask = () ->
-      $scope.activeList.tasks[currentTaskId] = {
+      $scope.activeList.tasks.push {
+        id: currentTaskId,
         name: $scope.newTaskName,
+        tags: ['tag', 'tag2'],
         complete: no
       }
       $scope.newTaskName = ''

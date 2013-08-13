@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 module Stripe where
 import Data.Aeson
 import Data.Aeson.TH
@@ -47,7 +48,7 @@ deleteCustomer :: CustomerId -> StripeResponse DeletedResponse
 deleteCustomer customerId = delete [uri| /customers/{customerId} |]
 
 -- list all customers
-listCustomers :: ListCustomersQuery -> StripeResponse Customers
+listCustomers :: ListCustomersQuery -> StripeResponse (List Customer)
 listCustomers q = get [uri| /customers{?q} |]
 
 -- Cards
@@ -205,7 +206,7 @@ retrieveBalance :: StripeResponse Balance
 retrieveBalance = get [uri| /balance |]
 
 listBalanceHistory :: Count -> Offset -> AvailableOn -> Created -> TransferId -> TransactionType -> StripeResponse (List Transaction)
-listBalanceHistory count offset available_on created transfer type = get [uri| /balance/history{?count,offset,available_on,created,transfer,type}|]
+listBalanceHistory count offset available_on created transfer = get [uri| /balance/history{?count,offset,available_on,created,transfer,type}|]
 
 -- Events
 
@@ -213,7 +214,7 @@ retrieveEvent :: EventId -> StripeResponse Event
 retrieveEvent eventId = get [uri| /events/{eventId} |]
 
 listEvents :: Count -> Offset -> Created -> EventType -> StripeResponse (List Event)
-listEvents count offset created type = get [uri| /events{?count,offset,created,type} |]
+listEvents count offset created = get [uri| /events{?count,offset,created,type} |]
 
 -- Tokens
 
