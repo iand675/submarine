@@ -44,6 +44,13 @@ listen rabbit :5672
 hostvars[backend]['ansible_eth0']['ipv4']['address'] }}:{{ hostvars[backend]['rabbit_port'] }}
 {% endfor %}
 
+listen redis :6379
+    mode tcp
+		option tcplog
+		balance leastconn
+{% for backend in groups['caches'] %}
+{% endfor %}
+
 frontend elastic_search
     bind :9200
     default_backend elastic_search_nodes
