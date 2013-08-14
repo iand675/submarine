@@ -1,25 +1,25 @@
 [web_servers]
-192.241.193.88
+tasks01.iankduncan.com
 
 [task_servers]
-192.241.193.88
+tasks01.iankduncan.com
 
 [message_brokers]
-192.241.193.88 rabbit_port=5673
+tasks01.iankduncan.com rabbit_port=5673
 [message_brokers:vars]
 rabbit_port=5672
 
 [load_balancers]
-192.241.193.88
+tasks01.iankduncan.com
 
 [caches]
-192.241.193.88 redis_port=6380
+tasks01.iankduncan.com redis_port=6380
 [caches:vars]
 redis_port=6379
 
 [databases]
-192.241.193.88
+tasks01.iankduncan.com
 
 [search_nodes]
-192.241.193.88
+tasks01.iankduncan.com
 
