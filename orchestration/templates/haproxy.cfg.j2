@@ -1,0 +1,55 @@
+global
+    pidfile /var/run/haproxy.pid
+    log 127.0.0.1 local0 info
+
+defaults
+    mode http
+
+    clitimeout          600000   # maximum inactivity time on the client side
+    srvtimeout          600000   # maximum inactivity time on the server side
+    timeout connect     8000  	 # maximum time to wait for a connection attempt to a server to succeed
+
+    stats enable
+    stats auth		ian:Cantguess1
+    stats uri		/monitor
+    stats refresh	5s
+    option httpchk	GET /status
+    retries		5
+    option redispatch
+    # errorfile 503 /path/to/503.text.file
+
+    balance roundrobin	# each server is used in turns, according to assigned weight
+
+frontend http
+    bind :80
+    monitor-uri   /haproxy  # end point to monitor HAProxy status (returns 200)
+
+    acl tasks path_reg ^/tasks/?
+
+    use_backend tasks if tasks
+
+backend tasks
+    # option httpclose
+{% for backend in groups['task_servers'] %}
+    server {{ hostvars[backend]['ansible_hostname'] }} {{
+hostvars[backend]['ansible_eth0']['ipv4']['address'] }}:9000 weight 1 maxconn 100 check inter 4000
+{% endfor %}
+
+listen rabbit :5672
+    mode tcp
+    option tcplog
+    balance leastconn
+{% for backend in groups['message_brokers'] %}
+    server {{ hostvars[backend]['ansible_hostname'] }} {{
+hostvars[backend]['ansible_eth0']['ipv4']['address'] }}:5672
+{% endfor %}
+
+frontend elastic_search
+    bind :9200
+    default_backend elastic_search_nodes
+
+backend elastic_search_nodes
+{% for backend in groups['search_nodes'] %}
+    server {{ hostvars[backend]['ansible_hostname'] }} {{
+hostvars[backend]['ansible_eth0']['ipv4']['address'] }}:9200
+{% endfor %}

@@ -1,0 +1,14 @@
+---
+- hosts: caches
+  user: deploy
+  sudo: true
+  tasks:
+    - name: ensure redis is up to date
+      apt: pkg=redis-server state=latest
+    - name: set listening interface
+      lineinfile: dest=/etc/redis/redis.conf regexp="^bind" line="bind = {{ ansible_eth0['ipv4']['address'] }}"
+      notify:
+        - restart redis
+  handlers:
+    - name: restart redis
+      service: name=haproxy state=restarted
