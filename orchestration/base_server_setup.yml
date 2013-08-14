@@ -1,0 +1,11 @@
+---
+- hosts: all
+  user: deploy
+  sudo: true
+  tasks:
+    - name: enable ufw
+    - name: install vim-nox
+    - name: install fail2ban
+    - name: disable root ssh
+    - name: install unattended-upgrades
+    - name: install logwatch

@@ -5,14 +5,15 @@
 192.241.193.88
 
 [message_brokers]
-192.241.193.88
+192.241.193.88 rabbit_port=5673
+[message_brokers:vars]
+rabbit_port=5672
 
 [load_balancers]
 192.241.193.88
 
 [caches]
 192.241.193.88 redis_port=6380
-
 [caches:vars]
 redis_port=6379
 

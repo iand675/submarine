@@ -1,0 +1,18 @@
+---
+- hosts: message_brokers
+  user: deploy
+  sudo: true
+  tasks:
+    - name: create rabbit config directory
+      file: dest=/etc/rabbitmq state=directory
+    - name: write rabbit configuration
+      template: src=templates/rabbitmq.config.j2 dest=/etc/rabbitmq/rabbitmq.config mode=0644 owner=root group=rabbitmq
+      notify:
+        - restart rabbit
+    - name: ensure rabbit is up to date
+      apt: pkg=rabbitmq-server state=latest
+      notify:
+        - restart rabbit
+  handlers:
+    - name: restart rabbit
+      service: name=rabbitmq-server state=restarted

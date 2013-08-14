@@ -41,7 +41,7 @@ listen rabbit :5672
     balance leastconn
 {% for backend in groups['message_brokers'] %}
     server {{ hostvars[backend]['ansible_hostname'] }} {{
-hostvars[backend]['ansible_eth0']['ipv4']['address'] }}:5672
+hostvars[backend]['ansible_eth0']['ipv4']['address'] }}:{{ hostvars[backend]['rabbit_port'] }}
 {% endfor %}
 
 frontend elastic_search
