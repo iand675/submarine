@@ -1,0 +1,33 @@
+---
+- hosts: load_balancers
+  tasks:
+    - name: install haproxy
+    - name: set up iptables
+    - name: write haproxy configuration
+      notify:
+        - hot reload configuration
+    - name: start haproxy
+- hosts: message_brokers
+  tasks:
+    - name: install rabbitmq
+    - name: write rabbitmq configuration
+    - name: start or restart rabbitmq
+- hosts: caches
+    - name: install redis
+    - name: write redis configuration
+    - name: start redis
+- hosts: databases
+  tasks:
+    - name: install postgres
+    - name: create {env} database
+    - name: create user
+    - name: run db migrations
+    - name: set up as either master or slave...
+- hosts: search_nodes
+- hosts: task_servers
+  tasks:
+    - name: deploy latest task server build
+      notify:
+        - disable task server in load balancer
+        - restart task server
+        - enable task server in load balancer
