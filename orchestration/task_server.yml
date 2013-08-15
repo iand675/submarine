@@ -1,0 +1,10 @@
+---
+- hosts: task_servers
+  user: deploy
+  tasks:
+    - name: ensure /var/www/ exists
+    - name: write task server upstart script
+    - name: copy latest build to server
+    - name: restart task_server
+    - name: run smoke tests
+    - name: tag latest deployment

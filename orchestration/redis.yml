@@ -11,10 +11,9 @@
       lineinfile: dest=/etc/redis/redis.conf regexp="^port" line="port {{ redis_port }}"
       notify:
         - restart redis
-    - name: ensure redis chain exists in whitelist
+    - name: ensure load balancers are whitelisted to access redis
       with_items: groups.load_balancers
-      command: /usr/sbin/ufw allow from {{hostvars[item]['ansible_eth0']['ipv4']['address']}} to any port {{redis_port}} proto tcp
-
+      command: ufw allow from {{hostvars[item]['ansible_eth0']['ipv4']['address']}} to any port {{redis_port}} proto tcp
   handlers:
     - name: restart redis
       service: name=redis-server state=restarted

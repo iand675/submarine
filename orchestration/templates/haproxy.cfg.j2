@@ -13,7 +13,7 @@ defaults
     stats auth		ian:Cantguess1
     stats uri		/monitor
     stats refresh	5s
-    option httpchk	GET /status
+    # option httpchk	GET /status
     retries		5
     option redispatch
     # errorfile 503 /path/to/503.text.file
@@ -25,7 +25,6 @@ frontend http
     monitor-uri   /haproxy  # end point to monitor HAProxy status (returns 200)
 
     acl tasks path_reg ^/tasks/?
-
     use_backend tasks if tasks
 
 backend tasks
@@ -40,8 +39,7 @@ listen rabbit :5672
     option tcplog
     balance leastconn
 {% for backend in groups['message_brokers'] %}
-    server {{ hostvars[backend]['ansible_hostname'] }} {{
-hostvars[backend]['ansible_eth0']['ipv4']['address'] }}:{{ hostvars[backend]['rabbit_port'] }}
+    server {{ hostvars[backend]['ansible_hostname'] }} {{ hostvars[backend]['ansible_eth0']['ipv4']['address'] }}:{{ hostvars[backend]['rabbit_port'] }} check
 {% endfor %}
 
 listen redis :6379
@@ -49,6 +47,7 @@ listen redis :6379
 		option tcplog
 		balance leastconn
 {% for backend in groups['caches'] %}
+    server {{ hostvars[backend]['ansible_hostname'] }} {{ hostvars[backend]['ansible_eth0']['ipv4']['address'] }}:{{ hostvars[backend]['redis_port'] }} check
 {% endfor %}
 
 frontend elastic_search
