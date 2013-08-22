@@ -1,10 +1,20 @@
 ---
+- hosts: dev_server
+  tasks:
+    - name: install dependencies
+    - name: build task_server
+    - name: run tests
 - hosts: task_servers
   user: deploy
   tasks:
     - name: ensure /var/www/ exists
     - name: write task server upstart script
-    - name: copy latest build to server
+    - name: set task_server on host to down
+    - name: copy build to server
     - name: restart task_server
     - name: run smoke tests
+    - name: set task_server on host to up
+- hosts: dev_server
+  tasks:
     - name: tag latest deployment
+    - name: push to github
