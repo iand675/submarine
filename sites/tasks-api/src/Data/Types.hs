@@ -14,11 +14,36 @@ module Data.Types (
 ) where
 import Data.Functor.Identity
 
-data User
-data List
-data Category
-data Team
-data Organization
+data User = User
+  { userEmail             :: Text
+  , userPasswordHash      :: Text
+  , userName              :: Text
+  , userGithubTokens      :: [Text]
+  , userPhone             :: Text
+  , userTaskCreationEmail :: Text
+  , userStripeInfo        :: StripeInfo
+  , userFogbugzInfo       :: FogBugzInfo
+  }
+
+data List = List
+  { listName     :: Text
+  , listCategory :: CategoryId
+  }
+
+data Category = Category
+  { categoryName :: Text
+  , categoryTeam :: TeamId
+  }
+
+data Team = Team
+  { teamName         :: Text
+  , teamOrganization :: OrganizationId
+  }
+
+data Organization = Organization
+  { organizationName :: Text
+  , organizationName
+  }
 
 newtype Id a = Id String
 data Task f = Task

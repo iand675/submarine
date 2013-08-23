@@ -92,3 +92,6 @@ txRollback = AMQP (ask >>= liftIO . A.txRollback)
 
 flow :: Bool -> AMQP ()
 flow flag = AMQP (ask >>= \c -> liftIO $ A.flow c flag)
+
+data Diff a = Diff { old :: a, new :: a }
+
