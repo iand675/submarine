@@ -1,4 +1,4 @@
-module Webby.JSON where
+module Submarine.JSON where
 import Data.Aeson.TH
 import Data.Char
 import Data.List

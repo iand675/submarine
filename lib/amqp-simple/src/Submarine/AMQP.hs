@@ -1,5 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module AMQP where
+module Submarine.AMQP where
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.Trans

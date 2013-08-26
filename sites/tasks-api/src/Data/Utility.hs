@@ -9,11 +9,3 @@ import Database.Redis.Simple
 
 class AMQPBacked m where
   amqp :: AMQP a -> m a
-
-class RedisBacked m where
-  redis :: Redis a -> m (Either Reply a)
-
-single :: [a] -> Maybe a
-single xs = case xs of
-	(x:[]) -> Just x
-	_      -> Nothing

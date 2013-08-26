@@ -20,25 +20,6 @@ import Data.Utility
 type HandlerM = ReaderT Config S.ActionM
 type Handler = HandlerM ()
 
-data RedisConfig = RedisConfig
-  { redisHost :: Text
-  , redisPort :: Int
-  }
-
-data RabbitConfig = RabbitConfig
-  { rabbitHost :: Text
-  , rabbitPort :: Int
-  , rabbitUsername :: Text
-  , rabbitPassword :: Text
-  }
-
-data PostgresConfig = PostgresConfig
-  { postgresHost :: Text
-  , postgresPort :: Int
-  , postgresUsername :: Text
-  , postgresPassword :: Text
-  }
-
 data ConfigSection = ConfigSection
   { redisSettings :: RedisConfig
   , rabbitSettings :: RabbitConfig
@@ -85,9 +66,6 @@ getConfig = do
     , postgresConnectionPool = undefined
     , rabbitConnectionPool = undefined
     }
-
-poolDefaults :: IO a -> (a -> IO ()) -> IO (Pool a)
-poolDefaults create destroy = createPool create destroy 4 5 200
 
 redisPool :: Redis.ConnectInfo -> IO (Pool Redis.Connection)
 redisPool connectionSettings = poolDefaults (Redis.connect connectionSettings) destroyRedisConnection

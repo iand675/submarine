@@ -1,0 +1,40 @@
+{
+	"folders":
+	[
+		{
+			"path": "sites",
+			"folder_exclude_patterns":
+			[
+				"accounts-api",
+				"payments",
+				"tasks"
+			]
+		},
+		{
+			"path": "lib",
+			"folder_exclude_patterns":
+			[
+				"github",
+				"hypermedia",
+				"mandrill",
+				"newrelic",
+				"stripe",
+				"twilio",
+				"uri-templater",
+				"postgres*",
+				"intercom",
+				"digitalocean",
+				"docker-api",
+				"easy-api",
+				"dist",
+				"cabal-dev",
+				"elastic-search",
+				"metrics"
+			],
+			"file_exclude_patterns":
+			[
+				"LICENSE"
+			]
+		}
+	]
+}
