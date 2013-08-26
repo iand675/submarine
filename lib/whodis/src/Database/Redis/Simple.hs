@@ -191,11 +191,6 @@ instance Functor RedisTx where
 instance Applicative RedisTx where
   pure = RedisTx . pure . pure
   l <*> r = RedisTx $ (fromRedisTx l >>= \txl -> fromRedisTx r >>= \txr -> return $ txl <*> txr)
-    where
-      wrap = do
-        txl <- fromRedisTx l
-        txr <- fromRedisTx r
-        return $ txl <*> txr
 
 instance WrappedRedis Redis R.Redis (Either R.Reply) where
   wrap = Redis . EitherT

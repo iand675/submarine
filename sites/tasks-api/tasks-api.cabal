@@ -18,7 +18,25 @@ cabal-version:       >=1.8
 executable tasks-api
   main-is:             Main.hs
   other-modules:       
-  build-depends:       base ==4.6.*, resource-pool ==0.2.*, hedis ==0.6.*, amqp-simple ==0.1.*, postgresql-simple ==0.3.*, whodis ==0.1.*, transformers ==0.3.*, scotty
+  build-depends:       base ==4.6.*,
+                       resource-pool ==0.2.*,
+                       hedis ==0.6.*,
+                       amqp-simple ==0.1.*,
+                       whodis ==0.1.*,
+                       transformers ==0.3.*,
+                       scotty,
+                       wai,
+                       warp,
+                       mtl,
+                       text,
+                       amqp,
+                       postgresql-simple,
+                       webby,
+                       uuid,
+                       aeson,
+                       yaml,
+                       bytestring,
+                       http-types
   hs-source-dirs:      src
 
 test-suite BackendTests

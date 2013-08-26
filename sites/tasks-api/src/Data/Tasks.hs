@@ -1,8 +1,17 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Data.Tasks where
-import AMQP
+import Control.Monad
+import Control.Monad.Trans
+import Data.Aeson (encode)
+import Data.ByteString.Char8 (ByteString, pack)
+import Data.ByteString.Lazy (toStrict)
+import Data.Monoid
 import Database.PostgreSQL.Simple
+
+import AMQP
 import Database.Redis.Simple
 import Data.Types
+import Data.Utility
 
 {-
 	forall TaskBackend:
@@ -16,11 +25,21 @@ import Data.Types
 	  updateTask emits task updated event
 	  deleteTask emits task deleted event
 -}
+
+taskExchange :: String
+taskExchange = "1_tasks"
+
+taskNamespace :: Show a => a -> ByteString
+taskNamespace x = "tasks:" <> pack (show x)
+
+taskCreated = undefined
+taskUpdated = undefined
+
 data TaskBackend m = TaskBackend
 	{ createTask :: NewTask -> m (Id Task, FullTask)
 	, getTask    :: Id Task -> m (Maybe FullTask)
 	, updateTask :: Id Task -> TaskPatch -> m (Maybe FullTask)
-	, listTasks  :: TaskQuery -> m [(Id Task, FullTask)]
+	, listTasks  :: TaskQuery -> m [Entity Task FullTask]
 	}
 
 data TaskQuery = Where [QueryPredicate]
@@ -29,49 +48,53 @@ data QueryPredicate
 	= AssignedTo (Id User)
 	| CreatedBy  (Id User)
 	| ListIs     (Id List)
-	| ProjectIs  (Id Project)
+	| CategoryIs (Id Category)
 	| HasTags    [String]
 
-taskBackend :: (RabbitBacked m, RedisBacked m, PostgresBacked m) => TaskBackend m
-taskBackend = publishTaskEvents $ cacheTasks $ postgresBackend
+-- taskBackend :: (RabbitBacked m, RedisBacked m, PostgresBacked m) => TaskBackend m
+-- taskBackend = publishTaskEvents $ cacheTasks $ postgresBackend
 
-publishTaskEvents :: RabbitBacked m => TaskBackend m -> TaskBackend m
-publishTaskEvents b = b
-  { createTask = \t -> (createTask b) t >>= \p@(taskId, task) -> do
-      amqp $ publish taskExchange (taskCreated taskId task)
-      return p
-    updateTask = \t p -> (updateTask b) t p >>= \mUpdatedTask -> do
-      case mUpdatedTask of
-        Nothing -> return ()
-        Just updatedTask -> amqp $ publish taskExchange (taskUpdated taskId updatedTask)
-      return mUpdatedTask
-  }
+--publishTaskEvents :: AMQPBacked m => TaskBackend m -> TaskBackend m
+--publishTaskEvents b = b
+--  { createTask = \t -> (createTask b) t >>= \p@(taskId, task) -> do
+--      amqp $ publishMessage taskExchange (taskCreated taskId task)
+--      return p
+--  , updateTask = \t p -> (updateTask b) t p >>= \mUpdatedTask -> do
+--      case mUpdatedTask of
+--        Nothing -> return ()
+--        Just updatedTask -> amqp $ publishMessage taskExchange (taskUpdated t updatedTask)
+--      return mUpdatedTask
+--  }
 
-cacheTasks :: RedisBacked m => TaskBackend m -> TaskBackend m
-cacheTasks b = b
-  { createTask = \t -> (createTask b) t >>= \p@(taskId, task) -> do
-      redis $ setCached taskId task
-      return p
-  , getTask = \taskId -> do
-      mtask <- getCached
-      case mtask of
-        Nothing -> do
-          mtask' <- (getTask b) taskId
-          maybe (return ()) (setCached taskId) t
-          return mtask'
-        foundTask -> return foundTask
-  , updateTask = \t p -> do
-      updatedTask <- (updateTask b) t p
-      maybe (return ()) (setCached t) updatedTask
-      return updatedTask
-  }
-  where
-    getCached taskId = redis $ do
-      mTask <- get (taskNamespace taskId)
-      lift $ expire (taskNamespace taskId) 86400
-      return $ maybe Nothing decode mTask
-    setCached taskId task = redis $ setEx (taskNamespace taskId) 86400 (encode task)
+--cacheTasks :: (Monad m, RedisBacked m) => TaskBackend m -> TaskBackend m
+--cacheTasks b = b
+--  { createTask = \t -> (createTask b) t >>= \p@(taskId, task) -> do
+--      redis $ setCached taskId task
+--      return p
+--  , getTask = \taskId -> do
+--      mtask <- getCached
+--      case mtask of
+--        Nothing -> do
+--          mtask' <- (getTask b) taskId
+--          maybe (return ()) (setCached taskId) mtask'
+--          return mtask'
+--        foundTask -> return foundTask
+--  , updateTask = \t p -> do
+--      updatedTask <- (updateTask b) t p
+--      maybe (return ()) (setCached t) updatedTask
+--      return updatedTask
+--  }
+--  where
+--    getCached taskId = redis $ do
+--      mTask <- get (taskNamespace taskId)
+--      expire (taskNamespace taskId) 86400
+--      return $ maybe Nothing decode mTask
+--    setCached :: (Monad m, RedisBacked m) => Id Task -> Task Identity -> m ()
+--    setCached taskId task = do
+--    	redis $ setEx (taskNamespace taskId) 86400 (toStrict $ encode task)
+--    	return ()
 
+{-
 inMemoryBackend :: TaskBackend (State (Int, HashMap String FullTask))
 inMemoryBackend = do
   undefined -- some simple implementation
@@ -81,7 +104,9 @@ inMemoryBackend = do
 		, updateTask = undefined
 		, listTasks  = undefined
 		}
+-}
 
+{-
 postgresBackend :: PostgresBacked m => TaskBackend m
 postgresBackend = TaskBackend
   { createTask = createTaskImpl,
@@ -118,4 +143,4 @@ listTasksImpl q = [pgsql| select {Task} from tasks where {{criterion}} |]
 			(ProjectIs (Id projectId)) -> "project_id = {listId}"
 			-- TODO: this should induce a join on a tags table (postgres arrays would be inappropriate)
 			(HasTags ts) -> "tags"
-
+-}
