@@ -12,10 +12,9 @@ import qualified Network.AMQP as Rabbit
 import System.Environment
 import qualified Web.Scotty as S
 
-import Data.Tasks (TaskBackend)
-import qualified Data.Tasks as T
-import Data.Types
-import Data.Utility
+import Submarine.Data.Redis
+import Submarine.Data.PostgreSQL
+import Submarine.Tasks.Backend
 
 type HandlerM = ReaderT Config S.ActionM
 type Handler = HandlerM ()
@@ -32,23 +31,13 @@ data ConfigSettings = ConfigSettings
   }
 
 data Config = Config
-  { redisConnectionPool    :: Pool Redis.Connection
+  { redisConnectionPool    :: Redis.Connection
   , postgresConnectionPool :: Pool Postgres.Connection
   , rabbitConnectionPool   :: Pool Rabbit.Connection
   , taskBackend            :: TaskBackend BackendM
-  --, logger :: Logger l
-  }
-
-data Logger m = Logger
-  { logSuccess :: Text -> m ()
-  , logWarn    :: Text -> m ()
-  , logInfo    :: Text -> m ()
-  , logError   :: Text -> m ()
-  , logFatal   :: Text -> m ()
   }
 
 data Environment = Development | Production
-
 
 getConfig :: IO Config
 getConfig = do
@@ -66,18 +55,6 @@ getConfig = do
     , postgresConnectionPool = undefined
     , rabbitConnectionPool = undefined
     }
-
-redisPool :: Redis.ConnectInfo -> IO (Pool Redis.Connection)
-redisPool connectionSettings = poolDefaults (Redis.connect connectionSettings) destroyRedisConnection
-  where
-    destroyRedisConnection :: Redis.Connection -> IO ()
-    destroyRedisConnection c = Redis.runRedis c Redis.quit >> return ()
-
-postgresPool :: Pool a
-postgresPool = undefined
-
-amqpPool :: Pool a
-amqpPool = undefined
 
 type BackendM = ReaderT Config IO
 

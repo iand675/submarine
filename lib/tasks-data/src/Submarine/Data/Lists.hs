@@ -1,4 +1,4 @@
-module Data.Lists where
+module Submarine.Data.Lists where
 
 data ListBackend m = ListBackend
   { createList :: NewList -> m (Id List, FullList)
@@ -7,5 +7,3 @@ data ListBackend m = ListBackend
   , deleteList :: Id List -> m (Maybe List)
   , listLists  :: ListQuery -> m [(Id List, FullList)]
   }
-
-

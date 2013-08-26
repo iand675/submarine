@@ -1,0 +1,1 @@
+module Submarine.Data.Teams where

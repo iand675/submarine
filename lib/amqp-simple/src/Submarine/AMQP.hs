@@ -12,6 +12,9 @@ import qualified Network.AMQP as A
 class FromMessage a where
   fromMessage :: A.Message -> Maybe a
 
+class AMQPBacked m where
+  amqp :: AMQP a -> m a
+
 runAMQP :: A.Channel -> AMQP a -> IO a
 runAMQP chan action = runReaderT (fromAMQP action) chan
 

@@ -1,4 +1,4 @@
-module Routing where
+module Submarine.Web.Routing where
 
 data Route = Route
   { route :: Text

@@ -1,4 +1,4 @@
-module Webby.Actions where
+module Submarine.Web.Actions where
 import Control.Monad.Trans
 import Data.Aeson (ToJSON, FromJSON)
 import Data.ByteString.Lazy (ByteString)

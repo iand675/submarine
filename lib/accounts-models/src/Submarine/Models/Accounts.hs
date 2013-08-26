@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Submarine.Models.Account where
+module Submarine.Models.Accounts where
 import Submarine.Common.Models
 import Submarine.JSON
 
