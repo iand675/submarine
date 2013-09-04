@@ -1,0 +1,29 @@
+[web_servers]
+192.168.33.10
+
+[task_servers]
+192.168.33.10
+
+[message_brokers]
+192.168.33.10 rabbit_port=5673
+
+[message_brokers:vars]
+rabbit_port=5672
+
+[load_balancers]
+192.168.33.10
+
+[caches]
+192.168.33.10 redis_port=6380
+
+[caches:vars]
+redis_port=6379
+
+[databases]
+192.168.33.10
+
+[search_nodes]
+192.168.33.10
+
+[log_viewers]
+192.168.33.10

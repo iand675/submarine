@@ -1,6 +1,3 @@
-[dev_server]
-dev.iankduncan.com
-
 [web_servers]
 tasks01.iankduncan.com
 
@@ -9,6 +6,7 @@ tasks01.iankduncan.com
 
 [message_brokers]
 tasks01.iankduncan.com rabbit_port=5673
+
 [message_brokers:vars]
 rabbit_port=5672
 
@@ -17,6 +15,7 @@ tasks01.iankduncan.com
 
 [caches]
 tasks01.iankduncan.com redis_port=6380
+
 [caches:vars]
 redis_port=6379
 

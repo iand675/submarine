@@ -1,0 +1,118 @@
+---
+- hosts: all
+  sudo: true
+  tasks:
+    #- name: enable ufw
+    - name: install vim
+      apt: pkg=vim-nox state=latest
+    - name: install fail2ban
+      apt: pkg=fail2ban state=latest
+    - name: install add-apt-repository
+      apt: pkg=python-software-properties state=latest
+    - name: ensure java is installed
+      apt: pkg=openjdk-7-jre-headless state=latest
+    - name: create adm group
+      group: name=adm
+    - name: create logstash user
+      user: name=logstash groups=adm
+    - name: create logstash folder
+      file: path=/opt/logstash state=directory group=adm owner=logstash
+    # - name: create logstash configuration folder
+      # file: path=/home/logstash/configurations state=directory owner=logstash
+    # write upstart config
+    - name: write logstash agent config
+      template: src=templates/logstash-agent.conf dest=/etc/init.d/logstash-agent.conf mode=0644 owner=root
+    - name: Download logstash agent
+      get_url: url=https://logstash.objects.dreamhost.com/release/logstash-1.2.0-flatjar.jar dest=/home/logstash/logstash-1.2.0.jar
+    # - name: disable root ssh
+    #- name: install unattended-upgrades
+    #- name: install logwatch
+# - hosts: web_servers
+- hosts: load_balancers
+  sudo: true
+  tasks:
+    - name: ensure haproxy is up to date
+      apt: pkg=haproxy state=latest
+    - name: enable init script
+      lineinfile: dest=/etc/default/haproxy regexp="^ENABLED" line="ENABLED=1"
+      notify:
+        - restart haproxy
+    - name: write haproxy configuration
+      template: src=templates/haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg mode=0644 owner=root group=haproxy
+      notify:
+        - restart haproxy
+  handlers:
+    - name: restart haproxy
+      service: name=haproxy state=restarted
+- hosts: message_brokers
+  sudo: true
+  tasks:
+    - name: add official rabbitmq apt-repo key
+      apt_key: url=http://www.rabbitmq.com/rabbitmq-signing-key-public.asc
+    - name: add official rabbitmq apt-repo
+      apt_repository: repo='deb http://www.rabbitmq.com/debian/ testing main' state=present
+    - name: create rabbit config directory
+      file: dest=/etc/rabbitmq state=directory
+    - name: write rabbit configuration
+      template: src=templates/rabbitmq.config.j2 dest=/etc/rabbitmq/rabbitmq.config mode=0644 owner=root group=rabbitmq
+      notify:
+        - restart rabbit
+    - name: ensure rabbit is up to date
+      apt: pkg=rabbitmq-server state=latest
+      notify:
+        - restart rabbit
+    - name: create 'enabled plugins' file
+      file: path=/etc/rabbitmq/enabled_plugins state=file
+    - name: enable rabbitmq management interface
+      template: src=templates/enabled_plugins dest=/etc/rabbitmq/enabled_plugins
+      notify: restart rabbit
+  handlers:
+    - name: restart rabbit
+      service: name=rabbitmq-server state=restarted
+- hosts: caches
+  sudo: true
+  tasks:
+    - name: add redis ppa key
+      apt_key: url="http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0xB9316A7BC7917B12"
+    - name: add redis ppa
+      apt_repository: repo="deb http://ppa.launchpad.net/chris-lea/redis-server/ubuntu precise main"
+    - name: ensure redis is up to date
+      apt: pkg=redis-server state=latest
+    # - name: set listening interface
+      # lineinfile: dest=/etc/redis/redis.conf regexp="^bind" line="bind {{ ansible_eth0['ipv4']['address'] }}"
+    # - name: set listening port
+      # lineinfile: dest=/etc/redis/redis.conf regexp="^port" line="port {{ redis_port }}"
+      notify:
+        - restart redis
+  handlers:
+    - name: restart redis
+      service: name=redis-server state=restarted
+- hosts: search_nodes:log_servers
+  sudo: true
+  tasks:
+    - name: ensure elasticsearch user exists
+      user: name=elasticsearch
+    - name: download elasticsearch deb
+      get_url: url=https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.3.deb dest=/home/elasticsearch/elasticsearch-0.90.3.deb
+    - name: install elasticsearch
+      command: dpkg -i /home/elasticsearch/elasticsearch-0.90.3.deb creates=/usr/share/elasticsearch
+- hosts: log_viewers
+  sudo: true
+  tasks:
+    - name: ensure kibana user exists
+      user: name=kibana
+    - name: get latest version of kibana
+      get_url: force=yes url=https://github.com/elasticsearch/kibana/archive/master.tar.gz dest=/home/kibana/kibana.tar.gz
+- hosts: databases
+  sudo: true
+  tasks:
+    - name: install postgres
+      apt: pkg=postgresql
+    - name: install postgres contrib
+      apt: pkg=postgresql-contrib
+# - hosts: search_nodes
+- hosts: all
+  sudo: true
+  tasks:
+    # - name: create logstash agent upstart script
+      # assemble: src=/home/logstash/configurations dest=/etc/agent.conf
