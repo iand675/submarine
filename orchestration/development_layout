@@ -14,16 +14,25 @@ rabbit_port=5672
 192.168.33.10
 
 [caches]
-192.168.33.10 redis_port=6380
+192.168.33.10 redis_port=6380 private_ip=127.0.0.1
 
 [caches:vars]
 redis_port=6379
 
 [databases]
-192.168.33.10
+192.168.33.10 postgres_port=5433 private_ip=127.0.0.1
+
+[databases:vars]
+postgres_port=5432
 
 [search_nodes]
-192.168.33.10
+192.168.33.10 elasticsearch_port=9201
+
+[search_nodes:vars]
+elasticsearch_port=9200
 
 [log_viewers]
+192.168.33.10
+
+[development]
 192.168.33.10

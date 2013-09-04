@@ -2,7 +2,8 @@
 - hosts: all
   sudo: true
   tasks:
-    #- name: enable ufw
+    - name: update apt
+      apt: update_cache=yes cache_valid_time=3600
     - name: install vim
       apt: pkg=vim-nox state=latest
     - name: install fail2ban
@@ -11,6 +12,12 @@
       apt: pkg=python-software-properties state=latest
     - name: ensure java is installed
       apt: pkg=openjdk-7-jre-headless state=latest
+    - name: ensure libgmp is installed
+      apt: pkg=libgmp-dev state=latest
+    - name: symlink libgmp .so file to libgmp.so
+      command: ln -s /usr/lib/x86_64-linux-gnu/libgmp.so.10 /usr/lib/libgmp.so creates=/usr/lib/libgmp.so
+    - name: symlink libgmp .so file to libgmp.so.3
+      command: ln -s /usr/lib/x86_64-linux-gnu/libgmp.so.10 /usr/lib/libgmp.so.3 creates=/usr/lib/libgmp.so.3
     - name: create adm group
       group: name=adm
     - name: create logstash user
@@ -28,22 +35,45 @@
     #- name: install unattended-upgrades
     #- name: install logwatch
 # - hosts: web_servers
-- hosts: load_balancers
+- hosts: development
   sudo: true
   tasks:
-    - name: ensure haproxy is up to date
-      apt: pkg=haproxy state=latest
-    - name: enable init script
-      lineinfile: dest=/etc/default/haproxy regexp="^ENABLED" line="ENABLED=1"
-      notify:
-        - restart haproxy
-    - name: write haproxy configuration
-      template: src=templates/haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg mode=0644 owner=root group=haproxy
-      notify:
-        - restart haproxy
-  handlers:
-    - name: restart haproxy
-      service: name=haproxy state=restarted
+    - name: ensure build-essential is installed
+      apt: pkg=build-essential state=latest
+    - name: add node ppa
+      apt_repository: repo='deb http://ppa.launchpad.net/chris-lea/node.js/ubuntu precise main' state=present
+    - name: ensure node is installed
+      apt: pkg=nodejs state=latest
+    # - name: ensure grunt is installed
+    #   npm: name=grunt-cli global=yes state=latest
+    # # - name: ensure less is installed
+    # - name: ensure jade is installed
+    #   npm: name=jade global=yes state=latest
+    # # - name: ensure bower is installed
+    # - name: ensure karma is installed
+    #   npm: name=karma global=yes state=latest
+- hosts: development
+  tasks:
+    - name: ensure dev folder exists
+      file: path=dev state=directory
+    - name: Comment out line which prevents loading bash profile by ssh
+      lineinfile: dest=~/.bashrc regexp='[ -z "$PS1" ] && return' line='# [ -z "$PS1" ] && return' state=present
+      when_string: $ansible_pkg_mgr == 'apt'
+    - name: ensure shell exports are set up
+      lineinfile: dest=~/.bashrc regexp='^export PATH' line='export PATH=$HOME/.cabal/bin:$HOME/dev/bin:$PATH'
+    - name: get ghc tarfile
+      get_url: url=http://www.haskell.org/ghc/dist/7.6.3/ghc-7.6.3-x86_64-unknown-linux.tar.bz2 dest=~/ghc-7.6.3.tar.bz2
+    - name: unpack ghc tarfile
+      command: tar xjf ghc-7.6.3.tar.bz2 creates=~/ghc-7.6.3
+    - name: install ghc
+      shell: cd ~/ghc-7.6.3 && ./configure --prefix=$HOME/dev/ && make install && cd ~ creates=~/dev/bin/ghc
+    - name: get cabal 1.18
+      get_url: url=http://hackage.haskell.org/packages/archive/cabal-install/1.18.0/cabal-install-1.18.0.tar.gz dest=~/cabal-install-1.18.0.tar.gz
+    - name: unpack cabal tarfile
+      command: tar xzf cabal-install-1.18.0.tar.gz creates=~/cabal-install-1.18.0
+    - name: install cabal
+      shell: cd ~/cabal-install-1.18.0 && ./bootstrap.sh && cd .. creates=~/.cabal/bin/cabal
+    # - name: install ghcjs
 - hosts: message_brokers
   sudo: true
   tasks:
@@ -53,6 +83,8 @@
       apt_repository: repo='deb http://www.rabbitmq.com/debian/ testing main' state=present
     - name: create rabbit config directory
       file: dest=/etc/rabbitmq state=directory
+    - name: ensure rabbitmq group exists
+      group: name=rabbitmq
     - name: write rabbit configuration
       template: src=templates/rabbitmq.config.j2 dest=/etc/rabbitmq/rabbitmq.config mode=0644 owner=root group=rabbitmq
       notify:
@@ -61,10 +93,8 @@
       apt: pkg=rabbitmq-server state=latest
       notify:
         - restart rabbit
-    - name: create 'enabled plugins' file
-      file: path=/etc/rabbitmq/enabled_plugins state=file
     - name: enable rabbitmq management interface
-      template: src=templates/enabled_plugins dest=/etc/rabbitmq/enabled_plugins
+      template: src=templates/enabled_plugins dest=/etc/rabbitmq/enabled_plugins group=rabbitmq owner=rabbitmq
       notify: restart rabbit
   handlers:
     - name: restart rabbit
@@ -80,8 +110,8 @@
       apt: pkg=redis-server state=latest
     # - name: set listening interface
       # lineinfile: dest=/etc/redis/redis.conf regexp="^bind" line="bind {{ ansible_eth0['ipv4']['address'] }}"
-    # - name: set listening port
-      # lineinfile: dest=/etc/redis/redis.conf regexp="^port" line="port {{ redis_port }}"
+    - name: set listening port
+      lineinfile: dest=/etc/redis/redis.conf regexp="^port" line="port $redis_port"
       notify:
         - restart redis
   handlers:
@@ -103,6 +133,21 @@
       user: name=kibana
     - name: get latest version of kibana
       get_url: force=yes url=https://github.com/elasticsearch/kibana/archive/master.tar.gz dest=/home/kibana/kibana.tar.gz
+    - name: ensure nginx is installed
+      apt: pkg=nginx state=latest
+    - name: disable nginx default site
+      file: path=/etc/nginx/sites-enabled/default state=absent
+      notify:
+        - restart nginx
+    - name: write static fileserving configuration
+      template: src=templates/kibana dest=/etc/nginx/sites-enabled/kibana mode=0644 owner=root
+      notify:
+        - restart nginx
+    - name: deploy kibana to fileserving directory
+      command: tar xzf /home/kibana/kibana.tar.gz chdir=/usr/share/nginx/www
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=restarted
 - hosts: databases
   sudo: true
   tasks:
@@ -110,6 +155,29 @@
       apt: pkg=postgresql
     - name: install postgres contrib
       apt: pkg=postgresql-contrib
+    - name: set listening postgres port
+      lineinfile: dest=/etc/postgresql/9.1/main/postgresql.conf regexp="^port" line="port = $postgres_port"
+      notify:
+        - restart postgres
+  handlers:
+    - name: restart postgres
+      service: name=postgresql state=restarted
+- hosts: load_balancers
+  sudo: true
+  tasks:
+    - name: ensure haproxy is up to date
+      apt: pkg=haproxy state=latest
+    - name: enable init script
+      lineinfile: dest=/etc/default/haproxy regexp="^ENABLED" line="ENABLED=1"
+      notify:
+        - restart haproxy
+    - name: write haproxy configuration
+      template: src=templates/haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg mode=0644 owner=root group=haproxy
+      notify:
+        - restart haproxy
+  handlers:
+    - name: restart haproxy
+      service: name=haproxy state=restarted
 # - hosts: search_nodes
 - hosts: all
   sudo: true
