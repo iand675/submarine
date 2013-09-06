@@ -153,6 +153,10 @@
 - hosts: databases
   sudo: true
   tasks:
+    - name: ensure postgres dev lib is installed
+      apt: pkg=libpq-dev state=latest
+    - name: ensure psycopg2 is installed
+      apt: pkg=python-psycopg2
     - name: install postgres
       apt: pkg=postgresql
     - name: install postgres contrib
@@ -164,6 +168,16 @@
   handlers:
     - name: restart postgres
       service: name=postgresql state=restarted
+- hosts: databases
+  sudo: true
+  sudo_user: postgres
+  tasks:
+    - name: create queueing errors database
+      postgresql_db: name=queueing port=5433
+    - name: create accounts database
+      postgresql_db: name=accounts port=5433
+    - name: create tasks database
+      postgresql_db: name=tasks port=5433
 - hosts: load_balancers
   sudo: true
   tasks:
