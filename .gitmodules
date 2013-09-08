@@ -1,3 +1,6 @@
 [submodule "lib/msgpack-haskell"]
 	path = lib/msgpack-haskell
 	url = https://github.com/iand675/msgpack-haskell
+[submodule "frontend/app/bootstrap"]
+	path = frontend/app/bootstrap
+	url = git@github.com:iand675/bootstrap.git
