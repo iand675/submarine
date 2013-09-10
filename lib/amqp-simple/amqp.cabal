@@ -16,7 +16,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     AMQP
+  exposed-modules:     Submarine.AMQP
   -- other-modules:       
   -- could add pipes to the dependencies if we wanted to do some wrapping with pipes too
   build-depends:       base ==4.6.*, amqp ==0.4.*, mtl, text
