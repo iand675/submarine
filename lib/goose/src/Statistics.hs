@@ -1,0 +1,29 @@
+-- views
+pg_stat_activity
+pg_stat_bgwriter
+pg_stat_database
+pg_stat_database_conflicts
+pg_stat_replication
+pg_stat_all_tables
+pg_stat_sys_tables
+pg_stat_user_tables
+pg_stat_xact_all_tables
+pg_stat_xact_sys_tables
+pg_stat_xact_user_tables
+pg_stat_all_indexes
+pg_stat_sys_indexes
+pg_stat_user_indexes
+pg_statio_all_tables
+pg_statio_sys_tables
+pg_statio_user_tables
+pg_statio_all_indexes
+pg_statio_sys_indexes
+pg_statio_user_indexes
+pg_statio_all_sequences
+pg_statio_sys_sequences
+pg_statio_user_sequences
+pg_stat_user_functions
+pg_stat_xact_user_functions
+
+-- view
+pg_locks 
