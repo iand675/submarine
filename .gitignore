@@ -5,6 +5,8 @@ cabal-dev
 *.chi
 *.chs.h
 .cabal-sandbox
+cabal.sandbox.config
+*.conf.d/
 
 .vagrant
 
@@ -23,3 +25,4 @@ bin/*
 .bundle/*
 
 secrets.yml
+.DS_Store
