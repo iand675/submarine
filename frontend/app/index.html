@@ -5,21 +5,21 @@
 <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title></title>
     <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
 
-        <!-- build:css({.tmp,app}) styles/main.css -->
-        <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
-        <link rel="stylesheet" href="bower_components/bootstrap-glyphicons/css/bootstrap-glyphicons.css">
+        <!-- build:css(.tmp) styles/main.css -->
+        <link rel="stylesheet" href="styles/bootstrap.css">
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootswatch/3.0.0/flatly/bootstrap.min.css">
         <link rel="stylesheet" href="styles/main.css">
         <!-- endbuild -->
-  </head>
+</head>
   <body ng-app="frontendApp">
     <!--[if lt IE 7]>
-      <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+      <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
 
     <!--[if lt IE 9]>
@@ -28,40 +28,37 @@
     <![endif]-->
 
     <!-- Add your site or application content here -->
-    <div class="container" ng-view></div>
+    <div ng-view=""></div>
 
-    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
-    <script>
-      var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
-      (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-      g.src='//www.google-analytics.com/ga.js';
-      s.parentNode.insertBefore(g,s)}(document,'script'));
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID -->
+     <script>
+       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+       ga('create', 'UA-XXXXX-X');
+       ga('send', 'pageview');
     </script>
-    <script id="IntercomSettingsScriptTag">
-      window.intercomSettings = {
-        email: "ian@iankduncan.com",
-        // TODO: The current logged in user's sign-up date as a Unix timestamp.
-        created_at: 1375899281,
-        app_id: "d5859221aef739bcf4050c39a5e639d7cc2f84ea"
-      };
-    </script>
-    <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://static.intercomcdn.com/intercom.v1.js';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}};})()</script>
 
     <script src="bower_components/jquery/jquery.js"></script>
     <script src="bower_components/angular/angular.js"></script>
 
-    <!-- build:js scripts/modules.js -->
-    <script src="bower_components/lodash/dist/lodash.js"></script>
-    <script src="bower_components/angular-resource/angular-resource.js"></script>
-    <script src="bower_components/angular-cookies/angular-cookies.js"></script>
-    <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
-    <script src="bower_components/restangular/dist/restangular.js"></script>
-    <!-- endbuild -->
+        <!-- build:js scripts/modules.js -->
+        <script src="bower_components/angular-resource/angular-resource.js"></script>
+        <script src="bower_components/angular-cookies/angular-cookies.js"></script>
+        <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+        <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+        <script src="bower_components/angular-bootstrap/ui-bootstrap.min.js"></script>
+        <!-- endbuild -->
 
-    <!-- build:js({.tmp,app}) scripts/scripts.js -->
-    <script src="scripts/app.js"></script>
-    <script src="scripts/controllers/main.js"></script>
-    <script src="scripts/services/tasks.js"></script>
-    <!-- endbuild -->
-  </body>
+        <!-- build:js({.tmp,app}) scripts/scripts.js -->
+        <script src="scripts/app.js"></script>
+        <script src="scripts/controllers/main.js"></script>
+        <script src="scripts/controllers/SignIn.js"></script>
+        <script src="scripts/controllers/Register.js"></script>
+        <script src="scripts/controllers/TaskList.js"></script>
+        <script src="scripts/directives/task.js"></script>
+        <!-- endbuild -->
+</body>
 </html>

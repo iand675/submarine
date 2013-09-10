@@ -1,78 +1,38 @@
-<div class="navbar navbar-fixed-top">
-  <a href="#" class="navbar-brand">Tasks</a>
-  <!--<p class="navbar-text pull-right">-->
-    <!--<a href="#">Ian Duncan</a>-->
-  <!--</p>-->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+	<div class="navbar-header">
+		<button type="button" class="navbar-toggle">
+			<span class="sr-only">Toggle navigation</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" href="#">Submarine</a>
+	</div>
+	<div class="collapse navbar-collapse">
+		<form class="navbar-form navbar-left" role="search">
+			<div class="form-group">
+				<input type="text" class="form-control" placeholder="Search">
+			</div>
+			<button type="submit" class="btn btn-default">Submit</button>
+		</form>
+		<button ng-controller="SigninCtrl" type="button" class="btn btn-success navbar-btn pull-right" ng-click="open()">Ian Duncan</button>
+		<ul class="nav navbar-nav">
+		</ul>
+	</div>
+</nav>
+<div class="col-sm-3">
+	<div class="panel panel-success">
+		<div class="panel-heading">Personal Lists</div>
+		<div class="panel-body">
+			<ul class="nav nav-pills nav-stacked">
+				<li class="active" ng-repeat="thing in awesomeThings">
+					<a href="#">{{thing}}</a>
+				</li>
+			</ul>
+		</div>
+	</div>
 </div>
-<div class="row">
-  <div class="col-lg-3">
-    <!--
-    <form>
-      <input type="search" class="form-control" placeholder="Search">
-    </form>
-    -->
-    <h3>Personal</h3>
-    <div class="list-group">
-      <a class="list-group-item" href="#">
-        <i class="glyphicon glyphicon-inbox" />
-        Inbox
-      </a>
-      <a class="list-group-item" href="#">
-        Today
-      </a>
-      <a class="list-group-item" href="#">
-        Due Soon
-      </a>
-    </div>
-    <!--
-    <h3>Organization <i class="glyphicon glyphicon-chevron-down pull-right"/></h3>
-    <div class="list-group">
-      <a class="list-group-item" data-ng-repeat="team in organization.groups" href="team.token">{{team.name}}</a>
-    </div>
-    -->
-  </div>
-  <div class="col-lg-9">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-8">
-          <h3>{{activeList.name}}</h3>
-        </div>
-        <div class="col-lg-4">
-          <input class="form-control" type="search" placeholder="Filter" value="" ng-model="taskFilter">
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-lg-12">
-          <button class="btn btn-small" type="button">Sort</button>
-          <button class="btn btn-small" type="button">Something</button>
-        </div>
-      </div>
-      <div class="row" data-ng-repeat="task in activeList.tasks | filter: { name: taskFilter }">
-        <div class="col-lg-12">
-          <div class="task" >
-            <div class="checkbox">
-              <label>
-                <input type="checkbox" data-ng-checked="task.complete" ng-click="toggleTaskCompletion(task.id)">
-                {{task.name}}
-                <span class="label label-info" ng-repeat="tag in task.tags"> {{tag}} </span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-lg-6">
-          <form ng-submit="addTask()">
-            <input type="text" class="form-control" placeholder="Task Name" />
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Task Description" ng-model="newTaskName">
-              <span class="input-group-btn">
-                <button class="btn btn-default" type="submit">Add Task</button>
-              </span>
-            </div>
-           </form>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="col-sm-9 task-list">
+	<h1>HTML5 Boilerplate</h1>
+	<button ng-repeat="thing in awesomeThings" class="btn btn-sm btn-info btn-block">{{thing}}!</button>
 </div>

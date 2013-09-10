@@ -62,7 +62,7 @@
       lineinfile: dest=~/.bashrc regexp='[ -z "$PS1" ] && return' line='# [ -z "$PS1" ] && return' state=present
       when_string: $ansible_pkg_mgr == 'apt'
     - name: ensure shell exports are set up
-      lineinfile: dest=~/.bashrc regexp='^export PATH' line='export PATH=$HOME/.cabal/bin:$HOME/dev/bin:$PATH'
+      lineinfile: dest=~/.bashrc regexp='^export PATH' line='export PATH=/usr/local/share/npm/bin/:$HOME/.cabal/bin:$HOME/dev/bin:$PATH'
     - name: get ghc tarfile
       get_url: url=http://www.haskell.org/ghc/dist/7.6.3/ghc-7.6.3-x86_64-unknown-linux.tar.bz2 dest=~/ghc-7.6.3.tar.bz2
     - name: unpack ghc tarfile
