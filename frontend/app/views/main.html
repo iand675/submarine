@@ -21,18 +21,64 @@
 	</div>
 </nav>
 <div class="col-sm-3">
+	<div class="form-group">
+		<input class="form-control" type="search" placeholder="Filter">
+	</div>
+	<button class="btn btn-info btn-block">New Group</button>
 	<div class="panel panel-success">
-		<div class="panel-heading">Personal Lists</div>
+		<div class="panel-heading">
+			Personal Lists
+		</div>
 		<div class="panel-body">
 			<ul class="nav nav-pills nav-stacked">
-				<li class="active" ng-repeat="thing in awesomeThings">
-					<a href="#">{{thing}}</a>
+				<li class="active" ng-repeat="thing in awesomeThings | orderBy:'name'">
+					<a href="#">{{thing.name}}</a>
 				</li>
 			</ul>
+			<input class="form-control" type="text" placeholder="New List">
+		</div>
+	</div>
+	<div class="panel panel-primary">
+		<div class="panel-heading">
+			Logos
+			<span class="pull-right glyphicon glyphicon-chevron-down"></span>
+		</div>
+		<div class="panel-body">
+			<ul class="nav nav-pills nav-stacked">
+				<li ng-repeat="thing in awesomeThings | orderBy: 'name'">
+					<a href="#">{{thing.name}}</a>
+				</li>
+			</ul>
+			<input class="form-control" type="text" placeholder="New List">
+		</div>
+		<div class="panel-footer">
+			Test
 		</div>
 	</div>
 </div>
 <div class="col-sm-9 task-list">
-	<h1>HTML5 Boilerplate</h1>
-	<button ng-repeat="thing in awesomeThings" class="btn btn-sm btn-info btn-block">{{thing}}!</button>
+	<h1>
+		HTML5 Boilerplate
+		<button class="btn btn-large btn-default pull-right">Edit List</button>
+	</h1>
+	<div class="row" ng-repeat="thing in awesomeThings">
+		<form role="form">
+			<div class="col-sm-12">
+				<div class="form-inline">
+					<button class="btn btn-info">Save</button>
+					<div class="form-group">
+						<input type="checkbox">
+					</div>
+					<div class="form-group">
+						<label class="sr-only" for="name">Name</label>
+						<input type="text" class="form-control" placeholder="Task Name" ng-model="thing.name">
+					</div>
+					Priority
+					Start Date
+					End Date
+					Estimated
+				</div>
+			</div>
+		</form>
+	</div>
 </div>

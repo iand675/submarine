@@ -3,8 +3,8 @@
 angular.module('frontendApp')
   .controller('MainCtrl', function ($scope) {
     $scope.awesomeThings = [
-      'HTML5 Boilerplate',
-      'AngularJS',
-      'Karma'
+      { name: 'HTML5 Boilerplate' },
+      { name: 'AngularJS' },
+      { name: 'Karma' }
     ];
   });
