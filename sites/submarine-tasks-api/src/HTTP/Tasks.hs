@@ -8,12 +8,12 @@ import Data.Monoid
 import Data.Pool
 import Data.UUID
 import Network.HTTP.Types
-import Webby.Actions
+import Submarine.Web.Actions
 import qualified Web.Scotty as S
 
 import Config
-import qualified Data.Tasks as T
-import Data.Utility
+--import qualified Submarine.Tasks.Data as T
+--import Submarine.
 import Submarine.Models.Task
 --import qualified Data.Tasks as Data
 
@@ -37,8 +37,8 @@ listTasksHandler = do
   (ls, rs) <- (partitionEithers . map S.parseParam) <$> params
   case ls of
     [] -> do
-      ts <- backend $ listTasks $ T.Where rs
-      json $ Tasks ts
+      --ts <- backend $ listTasks $ T.Where rs
+      json $ Tasks [] -- ts
     _ -> status badRequest400
 
 getTaskHandler :: Handler

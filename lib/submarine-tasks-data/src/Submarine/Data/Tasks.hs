@@ -1,16 +1,15 @@
 module Submarine.Data.Tasks where
 import Database.Redis.Simple
 import Submarine.AMQP.Schema
-import Submarine.Models.Common
-import Submarine.Models.Tasks
+import Submarine.Common.Models
+import Submarine.Models.Task
 
 data TaskBackend m = TaskBackend
-	{ createTask :: NewTask -> m (Id Task, FullTask)
-	, getTask    :: Id Task -> m (Maybe FullTask)
-	, updateTask :: Id Task -> TaskPatch -> m (Maybe FullTask)
-	, listTasks  :: TaskQuery -> m [Entity Task FullTask]
+	{ createTask :: NewTask -> m (Id Task, Task)
+	, getTask    :: Id Task -> m (Maybe Task)
+	, updateTask :: Id Task -> Task -> m (Maybe Task)
+	, listTasks  :: TaskQuery -> m [Entity Task]
 	}
-
 
 -- taskBackend :: (RabbitBacked m, RedisBacked m, PostgresBacked m) => TaskBackend m
 -- taskBackend = publishTaskEvents $ cacheTasks $ postgresBackend

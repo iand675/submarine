@@ -33,6 +33,8 @@ executable tasks-api
                        postgresql-simple,
                        submarine-web-common,
                        submarine-tasks-models,
+                       submarine-tasks-data,
+                       submarine-data-common,
                        uuid,
                        aeson,
                        yaml,

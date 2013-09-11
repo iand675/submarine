@@ -12,9 +12,12 @@ import qualified Network.AMQP as Rabbit
 import System.Environment
 import qualified Web.Scotty as S
 
+import Submarine.Data.Config
 import Submarine.Data.Redis
 import Submarine.Data.PostgreSQL
-import Submarine.Tasks.Backend
+import qualified Submarine.Data.Tasks as T
+import Submarine.Common.Models
+import Submarine.Models.Task
 
 type HandlerM = ReaderT Config S.ActionM
 type Handler = HandlerM ()
@@ -34,7 +37,7 @@ data Config = Config
   { redisConnectionPool    :: Redis.Connection
   , postgresConnectionPool :: Pool Postgres.Connection
   , rabbitConnectionPool   :: Pool Rabbit.Connection
-  , taskBackend            :: TaskBackend BackendM
+  , taskBackend            :: T.TaskBackend BackendM
   }
 
 data Environment = Development | Production
@@ -49,7 +52,6 @@ getConfig = do
     Just str -> if str == "production"
       then return Production
       else return Development
-  redisSettings <- redisPool Redis.defaultConnectInfo
   return $ Config
     { redisConnectionPool = redisSettings
     , postgresConnectionPool = undefined
@@ -68,7 +70,7 @@ getTask i = do
   b <- taskBackend <$> ask
   T.getTask b $ i
 
-listTasks :: T.TaskQuery -> BackendM [(Id Task, FullTask)]
+listTasks :: TaskQuery -> BackendM [(Id Task, FullTask)]
 listTasks q = do
   b <- taskBackend <$> ask
   T.listTasks b $ q

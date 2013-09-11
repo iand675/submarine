@@ -33,13 +33,16 @@ data List = List
   { listName     :: Text
   , listCategory :: CategoryId
   }
+type NewList = List
 
 jsonize ''List
 
-data Task f = Task
-	{ taskName :: f String
-	, taskComplete :: f Bool
+data Task = Task
+	{ taskName :: String
+	, taskComplete :: Bool
 	}
+type TaskPatch = Task
+type FullTask = Task
 
 jsonize ''Task
 
@@ -49,9 +52,9 @@ data NewTask = NewTask
 
 jsonize ''NewTask
 
-type FullTask = Task Identity
+--type FullTask = Task Identity
 
-type TaskPatch = Task Maybe
+--type TaskPatch = Task Maybe
 
 data TaskCreated = TaskCreated
   { taskCreatedId :: Id Task
@@ -68,3 +71,5 @@ data QueryPredicate
   | ListIs     (Id List)
   | CategoryIs (Id Category)
   | HasTags    [Text]
+
+data ListQuery = ListQuery

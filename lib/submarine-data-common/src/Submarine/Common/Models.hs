@@ -1,4 +1,8 @@
-module Submarine.Common.Models where
+module Submarine.Common.Models (
+  Identity(..),
+  Id(..),
+  Entity(..)
+) where
 import Control.Monad
 import Data.Aeson
 import Data.Functor.Identity
