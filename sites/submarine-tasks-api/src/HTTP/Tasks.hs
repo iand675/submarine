@@ -14,7 +14,7 @@ import qualified Web.Scotty as S
 import Config
 import qualified Data.Tasks as T
 import Data.Utility
-import HTTP.Models
+import Submarine.Models.Task
 --import qualified Data.Tasks as Data
 
 instance RedisBacked HandlerM where

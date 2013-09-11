@@ -1,6 +1,8 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Submarine.Models.Task where
-import Data.Text (Texts)
+import Data.Text (Text)
 
+import Submarine.Models.Accounts
 import Submarine.Common.Models
 import Submarine.JSON
 

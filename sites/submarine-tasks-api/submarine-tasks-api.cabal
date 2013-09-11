@@ -32,6 +32,7 @@ executable tasks-api
                        amqp,
                        postgresql-simple,
                        submarine-web-common,
+                       submarine-tasks-models,
                        uuid,
                        aeson,
                        yaml,
