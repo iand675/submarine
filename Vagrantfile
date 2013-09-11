@@ -17,6 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provider :vmware_fusion do |v, override|
     override.vm.box_url = "http://files.vagrantup.com/precise64_vmware.box"
     v.vmx['memsize'] = '2048'
+    v.vmx['numvcpus'] = '2'
   end
 
   config.vm.provider :virtualbox do |v, override|
