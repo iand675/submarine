@@ -14,8 +14,8 @@ instance ToJSON UUID where
   toJSON = toJSON . toString
 
 instance FromJSON UUID where
-  parseJSON = do
-  	str <- parseJSON
+  parseJSON v = do
+  	str <- parseJSON v
   	case fromString str of
   		Nothing -> fail "Invalid UUID"
   		Just u -> return u
