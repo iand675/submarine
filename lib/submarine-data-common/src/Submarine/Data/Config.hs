@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Submarine.Data.Config where
-import Data.YAML
+import Data.Text
+import Data.Yaml
 import Submarine.JSON
 
 loadConfig :: FromJSON a => IO (Maybe a)

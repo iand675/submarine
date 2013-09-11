@@ -18,4 +18,4 @@ snakeCase str = intercalate "_" $ map decapitalize $ chunk str []
 		chunk str chunked = let (match, rest) = break isUpper str in chunk rest (match : chunked)
 
 jsonize :: Name -> Q [Dec]
-jsonize name = deriveJSON (dropPrefix name) name
+jsonize name = deriveJSON (defaultOptions { fieldLabelModifier = dropPrefix name }) name

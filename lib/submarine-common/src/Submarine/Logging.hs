@@ -1,4 +1,6 @@
 module Submarine.Logging where
+import Data.ByteString.Lazy.Builder (Builder)
+import Data.Text (Text)
 import System.Log.FastLogger
 
 data LogEntry = LogEntry
