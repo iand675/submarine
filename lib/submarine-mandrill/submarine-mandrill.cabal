@@ -1,0 +1,19 @@
+name:                submarine-mandrill
+version:             0.1.0.0
+-- synopsis:            
+-- description:         
+homepage:            http://github.com/iand675/submarine
+-- license:             
+license-file:        LICENSE
+author:              Ian Duncan
+maintainer:          ian@iankduncan.com
+-- copyright:           
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.8
+
+library
+  exposed-modules:   Mandrill
+  -- other-modules:     
+  build-depends:     base ==4.6.*, mtl ==2.1.*, bytestring ==0.10.*, text ==0.11.*, aeson, http-conduit, resourcet, either, submarine-easy-api, submarine-uri-templater
+  hs-source-dirs:    src
