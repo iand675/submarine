@@ -6,14 +6,28 @@ import Submarine.Models.Accounts
 import Submarine.Common.Models
 import Submarine.JSON
 
-data TaskQuery = Where [QueryPredicate]
+data Organization = Organization
+  { organizationName :: Text
+  }
+type OrganizationId = Id Organization
 
-data QueryPredicate
-  = AssignedTo (Id User)
-  | CreatedBy  (Id User)
-  | ListIs     (Id List)
-  | CategoryIs (Id Category)
-  | HasTags    [Text]
+jsonize ''Organization
+
+data Team = Team
+  { teamName         :: Text
+  , teamOrganization :: OrganizationId
+  }
+type TeamId = Id Team
+
+jsonize ''Team
+
+data Category = Category
+  { categoryName :: Text
+  , categoryTeam :: TeamId
+  }
+type CategoryId = Id Category
+
+jsonize ''Category
 
 data List = List
   { listName     :: Text
@@ -21,29 +35,6 @@ data List = List
   }
 
 jsonize ''List
-
-type CategoryId = Id Category
-data Category = Category
-  { categoryName :: Text
-  , categoryTeam :: TeamId
-  }
-
-jsonize ''Category
-
-type TeamId = Id Team
-data Team = Team
-  { teamName         :: Text
-  , teamOrganization :: OrganizationId
-  }
-
-jsonize ''Team
-
-type OrganizationId = Id Organization
-data Organization = Organization
-  { organizationName :: Text
-  }
-
-jsonize ''Organization
 
 data Task f = Task
 	{ taskName :: f String
@@ -68,3 +59,12 @@ data TaskCreated = TaskCreated
   }
 
 jsonize ''TaskCreated
+
+data TaskQuery = Where [QueryPredicate]
+
+data QueryPredicate
+  = AssignedTo (Id User)
+  | CreatedBy  (Id User)
+  | ListIs     (Id List)
+  | CategoryIs (Id Category)
+  | HasTags    [Text]
