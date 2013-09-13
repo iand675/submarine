@@ -35,6 +35,7 @@ executable tasks-api
                        submarine-tasks-models,
                        submarine-tasks-data,
                        submarine-data-common,
+                       submarine-common,
                        uuid,
                        aeson,
                        yaml,

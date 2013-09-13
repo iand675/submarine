@@ -4,6 +4,7 @@ import Control.Monad.Reader
 import Web.Scotty
 import Config
 import HTTP.Tasks
+import Submarine.Web.Routing
 
 main = do
   settings <- getConfig
@@ -17,7 +18,7 @@ main = do
 tasks settings = do
 	let run m = runReaderT m settings
 	-- options "/tasks"
-	post "/tasks" $ run createTask
-	get "/tasks" $ run listTasks
-	get "/tasks/:taskId" $ run getTask
-	patch "/tasks/:taskId" $ run updateTask
+	post "/tasks" $ run createTaskHandler
+	get "/tasks" $ run listTasksHandler
+	get "/tasks/:taskId" $ run getTaskHandler
+	patch "/tasks/:taskId" $ run updateTaskHandler

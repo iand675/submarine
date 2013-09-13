@@ -1,0 +1,40 @@
+---
+production:
+  redisSettings:
+    host: "127.0.0.1"
+    port: 6379
+  rabbitSettings:
+    host: "127.0.0.1"
+    port: 1234
+    username: R4bbit
+    password: R4bbit
+  postgresSettings:
+    host: "127.0.0.1"
+    port: 1234
+    username: "postgres"
+    password: ""
+    database: ""
+development:
+  redisSettings:
+    host: "127.0.0.1"
+    port: 6379
+  rabbitSettings:
+    host: "127.0.0.1"
+    port: 1234
+    username: R4bbit
+    password: R4bbit
+  postgresSettings:
+    host: "127.0.0.1"
+    port: 1234
+    username: "postgres"
+    password: ""
+    database: ""
+# rabbitSettings:
+# postgresSettings:		
+# development:
+#  redisSettings:
+#  post: "127.0.0.1"
+#  port: 6379
+# # rabbitSettings:
+# # postgresSettings:
+# # 

@@ -6,6 +6,8 @@ import Database.Redis.Simple
 import Data.Either
 import Data.Monoid
 import Data.Pool
+import Data.Text (Text)
+import qualified Data.Text.Lazy as L
 import Data.UUID
 import Network.HTTP.Types
 import Submarine.Web.Actions
@@ -15,14 +17,28 @@ import Config
 --import qualified Submarine.Tasks.Data as T
 --import Submarine.
 import Submarine.Models.Task
+import Submarine.Data.Redis
 --import qualified Data.Tasks as Data
 
 instance RedisBacked HandlerM where
   redis m = do
     conf <- ask
-    liftIO $ withResource (redisConnectionPool conf) (\c -> runRedis c m)
+    liftIO $ runRedis (redisConnectionPool conf) m
 
-emptyTask = Task nil "" False
+emptyTask = Task "" False
+
+validateAndParseParam ks (k, v) = case lookup k ks of
+	Nothing -> Left ("Invalid query parameter: " <> k)
+	Just f -> Right $ f v
+
+queryPredicateHandlers :: [(L.Text, L.Text -> Either L.Text QueryPredicate)]
+queryPredicateHandlers = 
+	[ ("assigned_to", fmap AssignedTo . S.parseParam)
+	, ("created_by", fmap CreatedBy . S.parseParam)
+	, ("list_is", fmap ListIs . S.parseParam )
+	, ("category_is", fmap CategoryIs . S.parseParam)
+	, ("has_tags", fmap HasTags . S.parseParamList)
+	]
 
 createTaskHandler :: Handler
 createTaskHandler = do
@@ -34,10 +50,11 @@ createTaskHandler = do
 listTasksHandler :: Handler
 listTasksHandler = do
   -- need this to deal with key too, not just value
-  (ls, rs) <- (partitionEithers . map S.parseParam) <$> params
+  ps <- params
+  let (ls, rs) = partitionEithers $ map (validateAndParseParam queryPredicateHandlers) ps
   case ls of
     [] -> do
-      --ts <- backend $ listTasks $ T.Where rs
+      -- ts <- backend $ listTasks $ Where rs
       json $ Tasks [] -- ts
     _ -> status badRequest400
 

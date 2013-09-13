@@ -44,4 +44,3 @@ addLibrarySource l = do
 	putStrLn ("Adding source " ++ l)
 	system ("cabal sandbox add-source " ++ l)
 
-	

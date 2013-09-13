@@ -73,3 +73,7 @@ data QueryPredicate
   | HasTags    [Text]
 
 data ListQuery = ListQuery
+
+data Tasks = Tasks { tasksTasks :: [Task] }
+
+jsonize ''Tasks

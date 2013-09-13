@@ -27,7 +27,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision :ansible do |ansible|
     ansible.playbook = "orchestration/logstash_shipper.yml"
-    ansible.inventory_file = "orchestration/development_layout"
+    ansible.inventory_path = "orchestration/development_layout"
   end
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,

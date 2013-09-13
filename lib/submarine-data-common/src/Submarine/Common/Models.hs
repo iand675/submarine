@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Submarine.Common.Models (
   Identity(..),
   Id(..),
@@ -6,7 +7,10 @@ module Submarine.Common.Models (
 import Control.Monad
 import Data.Aeson
 import Data.Functor.Identity
+import Data.Text (Text)
+import Data.Text.Lazy (unpack, toStrict)
 import Data.UUID
+import Web.Scotty (Parsable(..))
 
 instance (ToJSON a) => ToJSON (Identity a) where
   toJSON = toJSON . runIdentity 
@@ -36,3 +40,14 @@ data Entity a = Entity
   }
 
 newtype Id a = Id UUID
+
+instance Parsable UUID where
+	parseParam p = case fromString $ unpack p of
+		Nothing -> Left "Invalid UUID"
+		Just u -> Right u
+
+instance Parsable (Id a) where
+	parseParam = fmap Id . parseParam
+
+instance Parsable Text where
+	parseParam = fmap toStrict . parseParam
