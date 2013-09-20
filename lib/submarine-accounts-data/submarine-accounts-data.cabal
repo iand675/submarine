@@ -16,9 +16,18 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Submarine.Accounts.Backend, Submarine.Accounts.Organizations, Submarine.Accounts.Teams, Submarine.Accounts.Users
+  exposed-modules:     Submarine.Data.Organizations, Submarine.Data.Teams, Submarine.Data.Users
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.6 && <4.7, submarine-data-common
+  build-depends:       base >=4.6 && <4.7,
+                       submarine-data-common,
+                       submarine-accounts-models,
+                       submarine-common,
+                       pwstore-fast,
+                       text,
+                       bytestring,
+                       postgresql-simple,
+                       hedis,
+                       resource-pool
   hs-source-dirs:      src
   default-language:    Haskell2010
