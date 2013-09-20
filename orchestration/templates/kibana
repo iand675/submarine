@@ -1,7 +1,7 @@
 server {
 	listen 8080;
 	location / {
-	    root /usr/share/nginx/www/kibana-master;
+	    root /usr/share/nginx/www/kibana-master/dist;
 	    index index.html;
 	    expires 30d;
 	    access_log off;
