@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 module Submarine.Models.Accounts where
 import Data.Text (Text)
 
@@ -9,8 +9,8 @@ type StripeInfo = ()
 type FogBugzInfo = ()
 
 data User = User
-  { userEmail             :: Text
-  , userPasswordHash      :: Text
+  { userUsername          :: Text
+	, userEmail             :: Text
   , userName              :: Text
   , userGithubTokens      :: [Text]
   , userPhone             :: Text
@@ -19,4 +19,15 @@ data User = User
   , userFogbugzInfo       :: FogBugzInfo
   }
 
+type instance Id User = Int
 jsonize ''User
+
+data NewUser = NewUser
+	{ newUserUsername :: Text
+	, newUserEmail    :: Text
+	, newUserPassword :: Text
+	{-, newUserName     :: Text-}
+	}
+jsonize ''NewUser
+
+data UserQuery = All

@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts, UndecidableInstances #-}
 module Submarine.Common.Models (
   Identity(..),
   Id(..),
@@ -7,6 +7,8 @@ module Submarine.Common.Models (
 import Control.Monad
 import Data.Aeson
 import Data.Functor.Identity
+import Data.HashMap.Strict (insert)
+import Data.Monoid ((<>))
 import Data.Text (Text)
 import Data.Text.Lazy (unpack, toStrict)
 import Data.UUID
@@ -28,26 +30,21 @@ instance FromJSON UUID where
   		Nothing -> fail "Invalid UUID"
   		Just u -> return u
 
-instance ToJSON (Id a) where
-  toJSON (Id u) = toJSON u
-
-instance FromJSON (Id a) where
-  parseJSON = fmap Id . parseJSON
+type family Id a :: *
 
 data Entity a = Entity
   { entityKey :: !(Id a)
   , entityValue :: !a
   }
 
-newtype Id a = Id UUID
+instance (ToJSON a, ToJSON (Id a)) => ToJSON (Entity a) where
+	toJSON e = Object (insert "id" (toJSON $ entityKey e) o)
+		where (Object o) = toJSON $ entityValue e
 
 instance Parsable UUID where
 	parseParam p = case fromString $ unpack p of
 		Nothing -> Left "Invalid UUID"
 		Just u -> Right u
-
-instance Parsable (Id a) where
-	parseParam = fmap Id . parseParam
 
 instance Parsable Text where
 	parseParam = fmap toStrict . parseParam

@@ -19,6 +19,6 @@ library
   exposed-modules:     Submarine.Models.Task
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.6 && <4.7, text >=0.11 && <0.12, submarine-common, submarine-data-common, submarine-accounts-models
+  build-depends:       base >=4.6 && <4.7, text >=0.11 && <0.12, submarine-common, submarine-data-common, submarine-accounts-models, uuid
   hs-source-dirs:      src
   default-language:    Haskell2010
