@@ -178,6 +178,11 @@
       postgresql_db: name=accounts port=5433
     - name: create tasks database
       postgresql_db: name=tasks port=5433
+    - name: create accounts user
+      postgresql_user: user=accounts_api db=accounts password=test port=5433
+    - name: create tasks user
+      postgresql_user: user=tasks_api db=tasks password=test port=5433
+
 - hosts: load_balancers
   sudo: true
   tasks:
