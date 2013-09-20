@@ -15,7 +15,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     Submarine.Web.Actions, Submarine.Web.Routing
+  exposed-modules:     Submarine.Web.Actions, Submarine.Web.Routing, Submarine.Web.Message
   -- other-modules:       
-  build-depends:       base ==4.6.*, bytestring, aeson, http-types, text, wai, scotty, mtl, template-haskell, unordered-containers
+  build-depends:       base ==4.6.*, bytestring, aeson, http-types, text, wai, scotty, mtl, template-haskell, unordered-containers, submarine-common
   hs-source-dirs:      src
