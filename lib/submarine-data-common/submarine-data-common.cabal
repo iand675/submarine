@@ -19,6 +19,21 @@ library
   exposed-modules:     Submarine.Common.Models, Submarine.Data.Config, Submarine.Data.Pool, Submarine.Data.PostgreSQL, Submarine.Data.Redis, Submarine.Data.Util
   -- other-modules:       
   other-extensions:    TemplateHaskell
-  build-depends:       base >=4.6 && <4.7, transformers >=0.3 && <0.4, uuid, submarine-common, aeson, yaml, resource-pool, postgresql-simple, submarine-hedis-simple, hedis, text, mtl, scotty
+  build-depends:       base >=4.6 && <4.7,
+                       transformers >=0.3 && <0.4,
+                       uuid,
+                       submarine-common,
+                       aeson,
+                       yaml,
+                       resource-pool,
+                       postgresql-simple,
+                       submarine-hedis-simple,
+                       submarine-postgres-simple-uuid,
+                       hedis,
+                       text,
+                       mtl,
+                       scotty,
+                       bytestring,
+                       unordered-containers
   hs-source-dirs:      src
   default-language:    Haskell2010

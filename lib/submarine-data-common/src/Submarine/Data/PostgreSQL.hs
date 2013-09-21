@@ -1,8 +1,12 @@
 module Submarine.Data.PostgreSQL where
 import Data.Pool
 import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.FromField
+import Database.PostgreSQL.Simple.ToField
+import Database.PostgreSQL.Simple.UUID
 import Data.Text (unpack)
 
+import Submarine.Common.Models
 import Submarine.Data.Config
 import Submarine.Data.Pool
 
@@ -17,6 +21,22 @@ initializePostgresConnectionPool conf = do
 		}
 	poolDefaults (connect connectInfo) close
 
-type PostgreSQL a = Connection -> IO a
-class PostgreSQLBacked m where
-	pg :: PostgreSQL a -> m a
+{-data Migration = Migration-}
+	{-{ migrationName :: Text-}
+	{-, migrationDependsOn :: Maybe Text-}
+	{-, migrationActions :: [MigrationAction]-}
+	{-}-}
+
+{-data MigrationAction-}
+	{-= CreateTable-}
+		{-{ tableName :: Text-}
+		{-, force-}
+		{-, columns-}
+		{-, indexes-}
+	{-| AddColumn-}
+	{-| AddIndex-}
+
+-- SELECT table_name FROM information_schema.tables WHERE table_schema = 'TASKS';
+-- create table if not exists migrations
+-- select latest migration from migrations
+-- run any migrations in order that don't exist
