@@ -1,5 +1,5 @@
 ---
-production:
+taskBackend:
   redisSettings:
     host: "127.0.0.1"
     port: 6379
@@ -10,11 +10,11 @@ production:
     password: R4bbit
   postgresSettings:
     host: "127.0.0.1"
-    port: 1234
-    username: "postgres"
-    password: ""
-    database: ""
-development:
+    port: 5432
+    username: tasks_api
+    password: test
+    database: tasks
+userBackend:
   redisSettings:
     host: "127.0.0.1"
     port: 6379
@@ -25,16 +25,7 @@ development:
     password: R4bbit
   postgresSettings:
     host: "127.0.0.1"
-    port: 1234
-    username: "postgres"
-    password: ""
-    database: ""
-# rabbitSettings:
-# postgresSettings:		
-# development:
-#  redisSettings:
-#  post: "127.0.0.1"
-#  port: 6379
-# # rabbitSettings:
-# # postgresSettings:
-# # 
+    port: 5432
+    username: accounts_api
+    password: test
+    database: accounts

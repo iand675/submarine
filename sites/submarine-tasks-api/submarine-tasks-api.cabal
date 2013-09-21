@@ -17,7 +17,7 @@ cabal-version:       >=1.8
 
 executable tasks-api
   main-is:             Main.hs
-  other-modules:       
+  other-modules:       Config, Util, HTTP.Tasks, HTTP.Users
   build-depends:       base ==4.6.*,
                        resource-pool ==0.2.*,
                        hedis ==0.6.*,
@@ -34,6 +34,8 @@ executable tasks-api
                        submarine-web-common,
                        submarine-tasks-models,
                        submarine-tasks-data,
+                       submarine-accounts-models,
+                       submarine-accounts-data,
                        submarine-data-common,
                        submarine-common,
                        uuid,

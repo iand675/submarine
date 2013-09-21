@@ -13,12 +13,15 @@ import qualified Network.AMQP as Rabbit
 import System.Environment
 import qualified Web.Scotty as S
 
+import Submarine.Common.Models
 import Submarine.Data.Config
 import Submarine.Data.Redis
 import Submarine.Data.PostgreSQL
 import qualified Submarine.Data.Tasks as T
-import Submarine.Common.Models
+import qualified Submarine.Data.Users as U
+import Submarine.Errors
 import Submarine.JSON
+import Submarine.Models.Accounts
 import Submarine.Models.Task
 
 data ConfigSection = ConfigSection
@@ -29,21 +32,17 @@ data ConfigSection = ConfigSection
 
 jsonize ''ConfigSection
 
-data ConfigSettings = ConfigSettings
-  { configSettingsProduction :: ConfigSection
-  , configSettingsDevelopment :: ConfigSection
-  }
+data ConfigSections = ConfigSections
+	{ configSectionsUserBackend :: ConfigSection
+	, configSectionsTaskBackend :: ConfigSection
+	}
 
-jsonize ''ConfigSettings
+jsonize ''ConfigSections
 
 data Config = Config
-  { redisConnectionPool    :: Redis.Connection
-  , postgresConnectionPool :: Pool Postgres.Connection
-  , rabbitConnectionPool   :: Pool Rabbit.Connection
-  , taskBackend            :: T.TaskBackend BackendM
-  }
-
-data Environment = Development | Production
+	{ taskBackend :: T.TaskBackend IO
+	, userBackend :: U.UserBackend IO
+	}
 
 type HandlerM = ReaderT Config S.ActionM
 type Handler = HandlerM ()
@@ -62,36 +61,46 @@ getConfig = do
 	case mConfigSettings of
 		Nothing -> error "No configuration file"
 		Just c -> do
-			redisConn <- initializeRedisConnectionPool $ configSectionRedisSettings $ configSettingsDevelopment c
+			tasksRedisConn <- initializeRedisConnectionPool $ configSectionRedisSettings $ configSectionsTaskBackend c
+			tasksPgConn <- initializePostgresConnectionPool $ configSectionPostgresSettings $ configSectionsTaskBackend c
+			userRedisConn <- initializeRedisConnectionPool $ configSectionRedisSettings $ configSectionsUserBackend c
+			userPgConn <- initializePostgresConnectionPool $ configSectionPostgresSettings $ configSectionsUserBackend c
 			return $ Config
-				{ redisConnectionPool = redisConn
-				, postgresConnectionPool = undefined
-				, rabbitConnectionPool = undefined
+				{ taskBackend = T.initializeTaskBackend tasksRedisConn tasksPgConn
+				, userBackend = U.initializeUserBackend userRedisConn userPgConn
 				}
 
-type BackendM = ReaderT Config IO
-
-createTask :: NewTask -> BackendM (Id Task, FullTask)
+createTask :: NewTask -> HandlerM (Either SingleValueError (Entity FullTask))
 createTask n = do
   b <- taskBackend <$> ask
-  T.createTask b $ n
+  liftIO $ T.createTask b $ n
 
-getTask :: Id Task -> BackendM (Maybe FullTask)
+getTask :: Id Task -> HandlerM (Either SingleValueError (Maybe FullTask))
 getTask i = do
   b <- taskBackend <$> ask
-  T.getTask b $ i
+  liftIO $ T.getTask b $ i
 
-listTasks :: TaskQuery -> BackendM [Entity Task]
+listTasks :: TaskQuery -> HandlerM [Entity Task]
 listTasks q = do
   b <- taskBackend <$> ask
-  T.listTasks b $ q
+  liftIO $ T.listTasks b $ q
 
-updateTask :: Id Task -> TaskPatch -> BackendM (Maybe FullTask)
+updateTask :: Id Task -> TaskPatch -> HandlerM (Either SingleValueError (Maybe FullTask))
 updateTask i t = do
   b <- taskBackend <$> ask
-  (T.updateTask b) i t
+  liftIO $ (T.updateTask b) i t
 
-backend :: MonadIO m => BackendM a -> ReaderT Config m a
-backend m = do
-  c <- ask
-  liftIO $ runReaderT m c
+createUser :: NewUser -> HandlerM (Either SingleValueError User)
+createUser u = do
+	b <- userBackend <$> ask
+	liftIO $ (U.createUser b) u
+
+getUser :: Text -> HandlerM (Either SingleValueError (Maybe User))
+getUser u = do
+	b <- userBackend <$> ask
+	liftIO $ (U.getUser b) u
+
+listUsers :: HandlerM [User]
+listUsers = do
+	b <- userBackend <$> ask
+	liftIO $ U.listUsers b All

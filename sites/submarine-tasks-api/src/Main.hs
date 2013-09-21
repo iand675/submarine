@@ -4,6 +4,7 @@ import Control.Monad.Reader
 import Web.Scotty
 import Config
 import HTTP.Tasks
+import HTTP.Users
 import Submarine.Web.Routing
 
 main = do
@@ -22,3 +23,6 @@ tasks settings = do
 	get "/tasks" $ run listTasksHandler
 	get "/tasks/:taskId" $ run getTaskHandler
 	patch "/tasks/:taskId" $ run updateTaskHandler
+	get "/users" $ run listUsersHandler
+	post "/users" $ run createUserHandler
+	get "/users/:userId" $ run getUserHandler

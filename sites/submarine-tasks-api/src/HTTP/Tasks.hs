@@ -2,7 +2,7 @@
 module HTTP.Tasks where
 import Control.Applicative
 import Control.Monad.Reader
-import Database.Redis.Simple
+import Database.Redis.Simple hiding (Message)
 import Data.Either
 import Data.Monoid
 import Data.Pool
@@ -11,21 +11,15 @@ import qualified Data.Text.Lazy as L
 import Data.UUID
 import Network.HTTP.Types
 import Submarine.Web.Actions
+import Submarine.Web.Message
 import qualified Web.Scotty as S
 
 import Config
+import Util
 --import qualified Submarine.Tasks.Data as T
 --import Submarine.
 import Submarine.Models.Task
-import Submarine.Data.Redis
 --import qualified Data.Tasks as Data
-
-instance RedisBacked HandlerM where
-  redis m = do
-    conf <- ask
-    liftIO $ runRedis (redisConnectionPool conf) m
-
-emptyTask = Task "" False
 
 validateAndParseParam ks (k, v) = case lookup k ks of
 	Nothing -> Left ("Invalid query parameter: " <> k)
@@ -42,35 +36,28 @@ queryPredicateHandlers =
 
 createTaskHandler :: Handler
 createTaskHandler = do
-  newTask <- jsonData
-  createdTask <- backend $ createTask newTask
-  status created201
-  json createdTask
+	jsonData >>= createTask >>= whenOk json
 
 listTasksHandler :: Handler
 listTasksHandler = do
   -- need this to deal with key too, not just value
-  ps <- params
-  let (ls, rs) = partitionEithers $ map (validateAndParseParam queryPredicateHandlers) ps
-  case ls of
-    [] -> do
-      -- ts <- backend $ listTasks $ Where rs
-      json $ Tasks [] -- ts
-    _ -> status badRequest400
+	ps <- params
+	let (ls, rs) = partitionEithers $ map (validateAndParseParam queryPredicateHandlers) ps
+	case ls of
+		[] -> do
+			-- ts <- backend $ listTasks $ Where rs
+			json $ Tasks [] -- ts
+		_ -> status badRequest400
 
 getTaskHandler :: Handler
 getTaskHandler = do
-  taskId <- param "taskId"
-  task <- backend $ getTask taskId
-  json task
+	param "taskId" >>= getTask >>= returnSingle
 
 updateTaskHandler :: Handler
 updateTaskHandler = do
-  taskId <- param "taskId"
-  taskPatch <- jsonData
-  updatedTask <- backend $ updateTask taskId taskPatch
-  json updatedTask
-
+	taskId <- param "taskId"
+	taskPatch <- jsonData
+	updateTask taskId taskPatch >>= returnSingle
 --data Body
 --data Segment segmentName a
 --data Query parameterName a
